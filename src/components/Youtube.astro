@@ -1,0 +1,5 @@
+---
+const { width, src } = Astro.props;
+const height = `${Math.floor(Number.parseInt(width) / 560 * 315)}`;
+---
+<iframe width={width} height={height} src={src} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>

@@ -1,0 +1,172 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Break from '../components/Break.astro';
+import ProjectDetail from '../components/ProjectDetail.astro';
+import wanderlustImage from '../images/wanderlust.png';
+import ascentImage from '../images/ascent.png';
+import tripleBeatImage from '../images/tripleBeat.png';
+import juSaberImage from '../images/juSaber.png';
+import rectangleImage from '../images/rectangle.png';
+import StatusEnum from '../utilities/statusEnum';
+
+const games = [
+    {
+        title: 'wanderlust',
+        status: StatusEnum.dev,
+        time: 'july 2022 - present',
+        description: 'a character creation system designed to help ttrpg players craft more flavorful backgrounds for their pcs. by combining randomized prompts and unexpected events with a baseline built by you, the player, this system ensures you walk away with a different character every time. expected playtime runs from 10-30 minutes, depending on how invested you get in fleshing out your character.',
+        media: [
+            {
+                type: 'image',
+                src: wanderlustImage
+            }
+        ],
+        links: [
+            {
+                href: 'http://onward.games/wanderlust',
+                text: 'website'
+            }
+        ]
+    },
+    {
+        title: 'untitled platformer',
+        status: StatusEnum.experiment,
+        time: 'september 2021',
+        description: "a platformer i started working on in unity. it was just a project for me to test and refresh my unity skills, so who knows what the final form will take (if there is one), but my focus for the moment was on smooth and satisfying movement that allows you to traverse levels with great speed if you're skilled.",
+        media: [
+            {
+                type: 'video',
+                src: '/videos/platformer.mp4'
+            },
+            {
+                type: 'video',
+                src: '/videos/platformer.mov'
+            }
+        ],
+        links: []
+    },
+    {
+        title: 'ascent',
+        status: StatusEnum.completed,
+        time: 'december 2018',
+        description: 'ascent vr is an experience i created as part of a team for the class 2.s972 (virtual reality, sound, and cinema) at mit, in collaboration with berklee and harvard. i was in charge of programming on this project and learned a lot about developing for vr through it. i also learned how to use fmod (both fmod studio and the unity integration) to bring in the music.',
+        media: [
+            {
+                type: 'image',
+                src: ascentImage
+            },
+            {
+                type: 'youtube',
+                src: 'https://www.youtube.com/embed/9UMlzILZtHc?si=jPPjUNsL5R2rqqYb'
+            }
+        ],
+        links: [
+            {
+                href: 'https://github.com/ddgond/ascent/releases/tag/1.0',
+                text: 'downloads'
+            },
+            {
+                href: 'https://github.com/ddgond/ascent',
+                text: 'github'
+            }
+        ]
+    },
+    {
+        title: 'triple beat',
+        status: StatusEnum.completed,
+        time: 'july 2019',
+        description: "triple beat is a rhythm game i developed for the july 2019 summer slow jams game jam organized by portland indie game squad. the theme was \"3-button, 3-color games\", and i took the opportunity to create an original rhythm game of my own. it has a strange control scheme due to limitations of the macbook keyboard (it won't register pressing the up arrow, left arrow, and right arrow at the same time), but it's very playable and enjoyable. it only has one song included (which i wrote), but it also includes a built-in map editor which can be used to add more. i am quite proud of this game, as i put a lot of effort into the aesthetics, mechanics, and music, especially when compared to jusaber. it was also my first solo game jam, and my first time creating an editor of any kind. development went smoothly and i couldn't be happier with the result. plus, it works on mac, windows, and linux!",
+        media: [
+            {
+                type: 'image',
+                src: tripleBeatImage
+            },
+            {
+                type: 'youtube',
+                src: 'https://www.youtube.com/embed/CYngEvmjFfY?si=DXPGfhG4OKIZWvOf'
+            }
+        ],
+        links: [
+            {
+                href: 'https://guatapuri.itch.io/triple-beat',
+                text: 'itch.io page'
+            },
+            {
+                href: 'https://github.com/ddgond/triple-beat',
+                text: 'github'
+            }
+        ]
+    },
+    {
+        title: 'jusaber',
+        status: StatusEnum.completed,
+        time: 'february 2019',
+        description: "jusaber is a quick game i threw together on a 6-hour flight that takes maps from beat saber and plays them as if they were jubeat maps. i had recently been in japan and was disappointed that i could never find japanese rhythm games in american arcades. i originally wanted to make a standard jubeat emulator, but realized that i would then have to make my own maps in order to be able to enjoy and play it. that was out of scope for such a short flight, so i adapted by simply using beat saber maps and a 4x3 grid rather than the standard 4x4. this also turned out to be a good move as the smaller grid makes it easier to keep your fingers in the right place on the keyboard. finally, beat saber maps turn out to be perfect for jubeat-style play and are incredibly fun to play in this way. since it is playable and i'm kinda busy with other things, i don't intend to develop it further in the forseeable future, but it would be nice to at least improve the interface at some point.",
+        media: [
+            {
+                type: 'image',
+                src: juSaberImage
+            },
+            {
+                type: 'youtube',
+                src: 'https://www.youtube.com/embed/qAaxTD6C7Aw?si=FROQHP5z5JWu36xA'
+            }
+        ],
+        links: [
+            {
+                href: 'https://github.com/ddgond/JuSaber/releases',
+                text: 'downloads'
+            },
+            {
+                href: 'https://github.com/ddgond/JuSaber',
+                text: 'github'
+            }
+        ]
+    },
+    {
+        title: 'rectangle simulator',
+        status: StatusEnum.completed,
+        time: 'january 2020',
+        description: "this was a website i made with two friends for the class web.lab at mit. you can upload decks of cards, browse through decks other people have made, and play games with friends online using the decks you find. i was in charge of handling the backend, client-server communication, and the overall design of the website (excluding the game view). the site is dead now that heroku eliminated its free tier.",
+        media: [
+            {
+                type: 'image',
+                src: rectangleImage
+            }
+        ],
+        links: [
+            {
+                href: 'https://get-rect-2020.herokuapp.com/',
+                text: 'website'
+            }
+        ]
+    }
+];
+
+---
+
+<Layout title="games">
+    {games.map((game, i) => {
+        if (i === 0) {
+            return <ProjectDetail game={game}/>
+        }
+        return <Break/> <ProjectDetail game={game}/>
+    })}
+</Layout>
+
+<style>
+    .info {
+        display: flex; 
+		flex-direction: row-reverse;
+		align-items: center;
+		gap: 1.2em;
+		justify-content: space-between;
+	}
+	@media (max-width: 550px) {
+		.info {
+			flex-direction: column;
+			align-items: start;
+			gap: 1em;
+		}
+	}
+</style>

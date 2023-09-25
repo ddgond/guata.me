@@ -1,0 +1,84 @@
+---
+import { Image } from 'astro:assets';
+import StatusEnum from '../utilities/statusEnum';
+import Youtube from './Youtube.astro';
+import Link from './Link.astro';
+
+const { title, description, time, status, media, links } = Astro.props.game;
+
+let statusClass = 'status ';
+if (status === StatusEnum.abandoned) {
+    statusClass += 'red';
+}
+if (status === StatusEnum.dev || status === StatusEnum.experiment) {
+    statusClass += 'orange';
+}
+if (status === StatusEnum.completed) {
+    statusClass += 'green';
+}
+
+---
+<div class="card">
+    <div class="title">
+        <div class="title-text">{title}</div>
+        <div class={statusClass}>{status} | {time}</div>
+    </div>
+    <div class="info">
+        <div class="info-media">
+            {media.map(item => {
+                if (item.type === 'image') {
+                    return <Image src={item.src} alt={`preview image for ${title}`} width="300"/>
+                }
+                if (item.type === 'video') {
+                    return <video src={item.src} controls width="300"/>
+                }
+                if (item.type === 'youtube') {
+                    return <Youtube src={item.src} width="300"/>
+                }
+            })}
+        </div>
+        <div class="info-description">{description}</div>
+    </div>
+    <div class="links">
+        {links.map(link => <Link href={link.href}>{link.text}</Link>)}
+    </div>
+</div>
+
+<style>
+    .title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.5em;
+        margin: 0.5em 0;
+    }
+    .title-text {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    .status {
+        font-size: 0.85em;
+        font-weight: bold;
+    }
+    .info {
+        display: flex; 
+		flex-direction: column;
+		gap: 1.2em;
+		justify-content: space-between;
+	}
+    .info-media {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+    .info-description {
+        border-left: 2px solid rgb(var(--accent));
+        padding-left: 1em;
+    }
+    .links {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 1.2em;
+    }
+</style>

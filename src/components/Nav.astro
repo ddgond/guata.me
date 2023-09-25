@@ -1,0 +1,46 @@
+---
+import Break from "./Break.astro";
+const { title } = Astro.props;
+
+const titles = ['home', 'games', 'dev', '3d']
+---
+
+<div class="links">
+    {titles.map(t => {
+        const href = t === 'home' ? '' : t;
+        if (title === t) {
+            return <a href={`/${href}`} class="active title">{t}</a>
+        }
+        return <a href={`/${href}`} class="title">{t}</a>
+    })}
+</div>
+<Break/>
+
+<style>
+    .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3em;
+        align-items: center;
+        font-size: 1.2em;
+    }
+
+    .title {
+        text-decoration: none;
+        color: rgb(var(--accent-dark));
+        border-radius: 2px;
+        padding: 0.2em 0.4em;
+        transition: all 0.2s;
+        &.active {
+            color: rgb(var(--accent));
+            font-size: 1.4em;
+            &:hover {
+                color: rgb(var(--accent-light));
+            }
+        }
+        &:hover {
+            color: rgb(var(--accent));
+            background-color: rgb(var(--accent-dark));
+        }
+    }
+</style>

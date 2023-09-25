@@ -1,0 +1,71 @@
+---
+import Nav from "../components/Nav.astro";
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Astro description" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title} - daniel dangond</title>
+	</head>
+	<body>
+		<main>
+		    <Nav title={title} />	
+			<slot />
+		</main>
+	</body>
+</html>
+<style is:global>
+	:root {
+		--accent: 153, 204, 255; /* 99ccff */
+		--accent-light: 230, 242, 255; /* cce6ff */
+		--accent-dark: 31, 41, 51;
+		--accent-gradient: linear-gradient(
+			45deg,
+			rgb(var(--accent)),
+			rgb(var(--accent-light)) 30%,
+			white 60%
+		);
+		--background: 19, 19, 26;
+	}
+	html {
+		font-family: system-ui, sans-serif;
+		background: rgb(var(--background));
+		box-sizing: border-box;
+		padding-bottom: 200px;
+	}
+	main {
+		margin: auto;
+		padding: 1rem;
+		width: 800px;
+		max-width: calc(100% - 2rem);
+		color: white;
+		line-height: 1.25;
+	}
+	code {
+		font-family:
+			Menlo,
+			Monaco,
+			Lucida Console,
+			Liberation Mono,
+			DejaVu Sans Mono,
+			Bitstream Vera Sans Mono,
+			Courier New,
+			monospace;
+	}
+	.red {
+		color: rgb(255, 180, 180);
+	}
+	.orange {
+		color: rgb(255, 220, 180);
+	}
+	.green {
+		color: rgb(180, 255, 180);
+	}
+</style>
