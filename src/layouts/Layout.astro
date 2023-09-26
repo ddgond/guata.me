@@ -1,11 +1,12 @@
 ---
+import { ViewTransitions, slide } from 'astro:transitions';
 import Nav from "../components/Nav.astro";
 
 const { title } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" transition:animate="none">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="description" content="Astro description" />
@@ -13,11 +14,14 @@ const { title } = Astro.props;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title} - daniel dangond</title>
+		<ViewTransitions fallback="swap"/>
 	</head>
 	<body>
 		<main>
-		    <Nav title={title} />	
-			<slot />
+		    <Nav title={title} />
+			<div transition:animate={slide({duration: '1s'})}>
+				<slot/>
+			</div>
 		</main>
 	</body>
 </html>

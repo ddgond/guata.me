@@ -26,7 +26,8 @@ const games = [
                 href: 'http://onward.games/wanderlust',
                 text: 'website'
             }
-        ]
+        ],
+        files: []
     },
     {
         title: 'untitled platformer',
@@ -43,7 +44,8 @@ const games = [
                 src: '/videos/platformer.mov'
             }
         ],
-        links: []
+        links: [],
+        files: []
     },
     {
         title: 'ascent',
@@ -69,7 +71,8 @@ const games = [
                 href: 'https://github.com/ddgond/ascent',
                 text: 'github'
             }
-        ]
+        ],
+        files: []
     },
     {
         title: 'triple beat',
@@ -95,7 +98,8 @@ const games = [
                 href: 'https://github.com/ddgond/triple-beat',
                 text: 'github'
             }
-        ]
+        ],
+        files: []
     },
     {
         title: 'jusaber',
@@ -121,7 +125,8 @@ const games = [
                 href: 'https://github.com/ddgond/JuSaber',
                 text: 'github'
             }
-        ]
+        ],
+        files: []
     },
     {
         title: 'rectangle simulator',
@@ -139,7 +144,8 @@ const games = [
                 href: 'https://get-rect-2020.herokuapp.com/',
                 text: 'website'
             }
-        ]
+        ],
+        files: []
     }
 ];
 
@@ -148,9 +154,9 @@ const games = [
 <Layout title="games">
     {games.map((game, i) => {
         if (i === 0) {
-            return <ProjectDetail game={game}/>
+            return <ProjectDetail project={game}/>
         }
-        return <Break/> <ProjectDetail game={game}/>
+        return <Break/> <ProjectDetail project={game}/>
     })}
 </Layout>
 

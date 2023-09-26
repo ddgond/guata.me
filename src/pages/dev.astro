@@ -1,0 +1,102 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Break from '../components/Break.astro';
+import ProjectDetail from '../components/ProjectDetail.astro';
+import recipesImage from '../images/recipes.png';
+import jackmodsImage from '../images/jackmods.png';
+import posenetImage from '../images/posenet.png';
+import StatusEnum from '../utilities/statusEnum';
+
+const projects = [
+    {
+        title: 'recipes',
+        status: StatusEnum.completed,
+        time: 'june 2022',
+        description: "a personal recipe website with a few useful features i never see on other websites and no bloat. nice features include ingredient sorting by when they appear in the recipe and ingredient highlighting on hover.",
+        media: [
+            {
+                type: 'image',
+                src: recipesImage
+            }
+        ],
+        links: [
+            {
+                href: 'http://recipes.guata.me/',
+                text: 'recipes'
+            }
+        ],
+        files: []
+    },
+    {
+        title: 'jackmods',
+        status: StatusEnum.completed,
+        time: 'october 21, 2020',
+        description: 'a web-based interface for modifying jackbox party pack games. only supports blather \'round. by uploading the default word list, you can make modifications and explore how the different prompts are implemented. alternatively, you can also create your own prompt list from scratch and replace the game\'s default list. the specific file you need (included in the game in a hidden folder) is blankyblankpasswords.jet.',
+        media: [
+            {
+                type: 'image',
+                src: jackmodsImage
+            }
+        ],
+        links: [
+            {
+                href: 'http://jackmods.surge.sh/',
+                text: 'jackmods'
+            }
+        ],
+        files: [
+            {
+                href: '/files/smashWordlist.jet',
+                text: 'smashwordlist.jet',
+                size: '66.7 kilobytes'
+            }
+        ]
+    },
+    {
+        title: 'posenet art',
+        status: StatusEnum.completed,
+        time: 'december 21, 2020',
+        description: 'a website for dancing with music while adding different effects based on what you do. built with posenet as part of ai@mit labs.',
+        media: [
+            {
+                type: 'image',
+                src: posenetImage
+            }
+        ],
+        links: [
+            {
+                href: 'https://posenet-art.netlify.app/',
+                text: 'posenet art'
+            }
+        ],
+        files: []
+    }
+];
+
+---
+
+<Layout title="dev">
+    {projects.map((project, i) => {
+        if (i === 0) {
+            return <ProjectDetail project={project}/>
+        }
+        return <Break/> <ProjectDetail project={project}/>
+    })}
+</Layout>
+
+<style>
+    .info {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        gap: 1.2em;
+        justify-content: space-between;
+    }
+    @media (max-width: 550px) {
+        .info {
+            flex-direction: column;
+            align-items: start;
+            gap: 1em;
+        }
+    }
+</style>

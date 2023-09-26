@@ -1,7 +1,11 @@
 ---
+const { href } = Astro.props;
 ---
 <div class="chip">
-    <slot/>
+    { href ? <a href={href}><slot/></a>
+        :
+        <slot/>
+    }
 </div>
 
 <style>
@@ -11,5 +15,15 @@
         padding: 0.6em 1.2em;
         background-color: rgb(var(--accent-dark));
         border-radius: 2px;
+    }
+    a {
+        color: rgb(var(--accent));
+        text-decoration: none;
+        border-bottom: 1px solid rgb(var(--accent));
+        transition: all 0.2s;
+    }
+    a:hover {
+        color: rgb(var(--accent-light));
+        border-bottom: 1px solid rgb(var(--accent-light));
     }
 </style>

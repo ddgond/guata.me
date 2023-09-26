@@ -4,7 +4,7 @@ import StatusEnum from '../utilities/statusEnum';
 import Youtube from './Youtube.astro';
 import Link from './Link.astro';
 
-const { title, description, time, status, media, links } = Astro.props.game;
+const { title, description, time, status, media, links, files } = Astro.props.project;
 
 let statusClass = 'status ';
 if (status === StatusEnum.abandoned) {
@@ -33,7 +33,7 @@ if (status === StatusEnum.completed) {
                     return <video src={item.src} controls width="300"/>
                 }
                 if (item.type === 'youtube') {
-                    return <Youtube src={item.src} width="300"/>
+                    return <Youtube src={item.src} width={media.length === 1 ? "500" : "300"}/>
                 }
             })}
         </div>
@@ -41,6 +41,7 @@ if (status === StatusEnum.completed) {
     </div>
     <div class="links">
         {links.map(link => <Link href={link.href}>{link.text}</Link>)}
+        {files.map(file => <Link href={file.href}>↓&nbsp;{file.text}</Link>)}
     </div>
 </div>
 

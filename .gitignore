@@ -4,6 +4,9 @@ dist/
 # generated types
 .astro/
 
+# editor
+.idea
+
 # dependencies
 node_modules/
 

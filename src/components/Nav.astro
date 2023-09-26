@@ -2,7 +2,7 @@
 import Break from "./Break.astro";
 const { title } = Astro.props;
 
-const titles = ['home', 'games', 'dev', '3d']
+const titles = ['home', 'games', 'dev', '3d'];
 ---
 
 <div class="links">
@@ -31,16 +31,16 @@ const titles = ['home', 'games', 'dev', '3d']
         border-radius: 2px;
         padding: 0.2em 0.4em;
         transition: all 0.2s;
-        &.active {
-            color: rgb(var(--accent));
-            font-size: 1.4em;
-            &:hover {
-                color: rgb(var(--accent-light));
-            }
-        }
-        &:hover {
-            color: rgb(var(--accent));
-            background-color: rgb(var(--accent-dark));
-        }
+    }
+    .title:hover {
+        color: rgb(var(--accent));
+        background-color: rgb(var(--accent-dark));
+    }
+    .title.active {
+        color: rgb(var(--accent));
+        font-size: 1.4em;
+    }
+    .title.active:hover {
+        color: rgb(var(--accent-light));
     }
 </style>

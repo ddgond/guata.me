@@ -1,0 +1,89 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Break from '../components/Break.astro';
+import ProjectDetail from '../components/ProjectDetail.astro';
+import squeaksiesImage from '../images/squeaksies.png';
+import StatusEnum from '../utilities/statusEnum';
+
+const projects = [
+    {
+        title: 'the path to wisdom',
+        status: StatusEnum.completed,
+        time: 'november 2021 - march 2022',
+        description: "a recreation of the intro for the tv show arcane, adapted to showcase highlights from my group’s d&d campaign, created with blender and davinci resolve. this was a blast to create and consumed many hours after work, and i learned tons in the process. i would not be surprised if this had crossed the 100-hour mark in terms of time spent.",
+        media: [
+            {
+                type: 'youtube',
+                src: 'https://www.youtube.com/embed/kEiCFiP0yB8?si=I4hJ46Rstct2TeTM'
+            }
+        ],
+        links: [],
+        files: []
+    },
+    {
+        title: 'a frozen world',
+        status: StatusEnum.completed,
+        time: 'may 2021',
+        description: "my submission for pwnisher's alternate realities render challenge, the winners of which you can find below. unfortunately, as far as i can tell, my clip is nowhere to be found in the full compilation of submissions despite my name being in the list of received submissions, so 🤷‍♂️. i spent probably around 40-60 hours working on this over the course of the month that the contest ran, and i'm super proud of how it came out. i learned so much about blender's shader nodes system and modeling tools by doing this, and highly recommend people learning 3d modeling to try a challenge like this sometime!",
+        media: [
+            {
+                type: 'youtube',
+                src: 'https://www.youtube.com/embed/gRIGVcSEE4Y?si=OFN9PLmk-9pZuqcf'
+            }
+        ],
+        links: [
+            {
+                href: 'https://www.youtube.com/watch?v=iKBs9l8jS6Q&t=0s',
+                text: 'challenge winners'
+            }
+        ],
+        files: []
+    },
+    {
+        title: 'vr avatar for squeaksies',
+        status: StatusEnum.completed,
+        time: 'september 2018',
+        description: "a rigged-for-vr avatar i created for the mapper squeaksies from the beat saber modding group discord.",
+        media: [
+            {
+                type: 'image',
+                src: squeaksiesImage
+            }
+        ],
+        links: [
+            {
+                href: 'https://modelsaber.com/Avatars/?id=1546484940',
+                text: 'modelsaber (download link)'
+            }
+        ],
+        files: []
+    }
+];
+
+---
+
+<Layout title="3d">
+    {projects.map((project, i) => {
+        if (i === 0) {
+            return <ProjectDetail project={project}/>
+        }
+        return <Break/> <ProjectDetail project={project}/>
+    })}
+</Layout>
+
+<style>
+    .info {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        gap: 1.2em;
+        justify-content: space-between;
+    }
+    @media (max-width: 550px) {
+        .info {
+            flex-direction: column;
+            align-items: start;
+            gap: 1em;
+        }
+    }
+</style>
