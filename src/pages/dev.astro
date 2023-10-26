@@ -2,12 +2,52 @@
 import Layout from '../layouts/Layout.astro';
 import Break from '../components/Break.astro';
 import ProjectDetail from '../components/ProjectDetail.astro';
+import loreSageImage from '../images/loreSage.png';
+import onwardImage from '../images/onward.png';
 import recipesImage from '../images/recipes.png';
 import jackmodsImage from '../images/jackmods.png';
 import posenetImage from '../images/posenet.png';
 import StatusEnum from '../utilities/statusEnum';
 
 const projects = [
+	{
+		title: 'lore sage',
+		status: StatusEnum.completed,
+		time: 'march 2023 - july 2023',
+		description: 'with your creative input, lore sage transforms your ideas into immersive settings teeming with diverse landscapes, rich histories, and compelling storylines. as a dungeon master, you can now focus on weaving together the tales of your player characters, while lore sage expertly handles the intricate details of the setting itself. (currently inactive)',
+		media: [
+			{
+				type: 'image',
+				src: loreSageImage
+			}
+		],
+		links: [
+			{
+				href: 'https://loresage.com/',
+				text: 'lore sage'
+			}
+		],
+		files: []
+	},
+    {
+		title: 'onward! games',
+		status: StatusEnum.dev,
+		time: 'july 2022 - present',
+		description: 'a studio focused on creating fun tools to help players of ttrpgs create detailed and exciting characters and locations.',
+		media: [
+			{
+				type: 'image',
+				src: onwardImage
+			}
+		],
+		links: [
+			{
+				href: 'https://onward.games/',
+				text: 'onward! games'
+			}
+		],
+		files: []
+    },
     {
         title: 'recipes',
         status: StatusEnum.completed,
