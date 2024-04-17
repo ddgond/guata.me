@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Break from '../components/Break.astro';
 import ProjectDetail from '../components/ProjectDetail.astro';
+import superbOwlImage from '../images/superbOwl.png';
 import loreSageImage from '../images/loreSage.png';
 import onwardImage from '../images/onward.png';
 import recipesImage from '../images/recipes.png';
@@ -10,6 +11,25 @@ import posenetImage from '../images/posenet.png';
 import StatusEnum from '../utilities/statusEnum';
 
 const projects = [
+  {
+    title: 'superb owl',
+    status: StatusEnum.completed,
+    time: 'february 2024 - february 2024',
+    description: 'a site made for betting fake internet points on events that may or may not occur. designed for the super bowl, usable for many other events!',
+    media: [
+      {
+        type: 'image',
+        src: superbOwlImage
+      }
+    ],
+    links: [
+      {
+        href: 'https://superbowl.guata.me',
+        text: 'superb owl'
+      }
+    ],
+    files: []
+  },
 	{
 		title: 'lore sage',
 		status: StatusEnum.completed,
