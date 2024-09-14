@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Break from '../components/Break.astro';
 import ProjectDetail from '../components/ProjectDetail.astro';
+import hanziImage from '../images/hanzi.png';
 import superbOwlImage from '../images/superbOwl.png';
 import loreSageImage from '../images/loreSage.png';
 import onwardImage from '../images/onward.png';
@@ -11,6 +12,25 @@ import posenetImage from '../images/posenet.png';
 import StatusEnum from '../utilities/statusEnum';
 
 const projects = [
+  {
+    title: 'hanzi (working title)',
+    status: StatusEnum.dev,
+    time: 'july 2024 - present',
+    description: 'a site made for learning chinese characters and vocabulary from the hsk tests. includes a spaced repetition system for reviews that enables easy practice and memorization. has been incredibly useful for me.',
+    media: [
+      {
+        type: 'image',
+        src: hanziImage,
+      }
+    ],
+    links: [
+      {
+        href: 'https://hanzi.guata.me',
+        text: 'hanzi'
+      }
+    ],
+    files: []
+  },
   {
     title: 'superb owl',
     status: StatusEnum.completed,
