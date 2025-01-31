@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Break from '../components/Break.astro';
 import ProjectDetail from '../components/ProjectDetail.astro';
+import mtaImage from '../images/mta.png';
 import hanziImage from '../images/hanzi.png';
 import superbOwlImage from '../images/superbOwl.png';
 import loreSageImage from '../images/loreSage.png';
@@ -12,6 +13,25 @@ import posenetImage from '../images/posenet.png';
 import StatusEnum from '../utilities/statusEnum';
 
 const projects = [
+  {
+    title: 'mta city flow visualization',
+    status: StatusEnum.completed,
+    time: 'october 2024 - october 2024',
+    description: 'this project, created for the mta\'s 2024 open data challenge, transforms the mta\'s origin-destination ridership dataset into an interactive 3d visualization that reveals how subway ridership shapes new york city\'s daily population flows.',
+    media: [
+      {
+        type: 'image',
+        src: mtaImage,
+      }
+    ],
+    links: [
+      {
+        href: 'https://mta.guata.me',
+        text: 'mta city flow visualization'
+      }
+    ],
+    files: []
+  },
   {
     title: 'hanzi (working title)',
     status: StatusEnum.dev,
