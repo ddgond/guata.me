@@ -1,0 +1,20 @@
+---
+import { getCollection } from 'astro:content';
+import ProjectEntry from './ProjectEntry.astro';
+
+const { category, heading } = Astro.props;
+
+const projects = (await getCollection('projects', (p) => p.data.category === category)).sort(
+	(a, b) => b.data.order - a.data.order
+);
+---
+
+<h2 class="section">{heading}</h2>
+{
+	projects.map((entry, i) => (
+		<>
+			{i > 0 && <div class="divider" />}
+			<ProjectEntry entry={entry} />
+		</>
+	))
+}

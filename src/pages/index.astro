@@ -1,51 +1,140 @@
 ---
 import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
-import Break from '../components/Break.astro';
-import Tag from '../components/Tag.astro';
-import Chip from '../components/Chip.astro';
-import FullLink from '../components/FullLink.astro';
+import logo from '../images/dan-dangond-logo.png';
 import dan from '../images/dan.jpeg';
 ---
 
-<Layout title="home">
-	<div class="info">
-        <Image class="info-profile" src={dan} alt="image of daniel dangond" width="150" height="150"/>
-		<div class="info-tags">
-            <Tag label="name">daniel dangond</Tag>	
-            <Tag label="online aliases">guatapuri, onward! games</Tag>	
-            <Tag label="hobbies">writing software, playing and making games, d&d, piano, digital art, photography</Tag>	
+<Layout title="Home" active="home" showNavLogo={false}>
+	<div class="hero">
+		<Image class="hero-logo" src={logo} alt="Dan Dangond" width={440} densities={[1, 2]} />
+		<Image class="hero-photo" src={dan} alt="Photo of Daniel Dangond" width={150} height={150} />
+	</div>
+
+	<p class="placeholder">
+		Intro placeholder — one or two sentences in your voice about who you are and what you do,
+		e.g. what you're building these days and what this site holds. Replace this
+		&lt;p class="placeholder"&gt; with a plain &lt;p class="intro"&gt; once written.
+	</p>
+
+	<div class="facts">
+		<div class="fact"><span class="fact-label">Name:</span> Daniel Dangond</div>
+		<div class="fact"><span class="fact-label">Online aliases:</span> Guatapuri, Onward! Games</div>
+		<div class="fact">
+			<span class="fact-label">Hobbies:</span> Writing software, playing and making games, D&D,
+			piano, digital art, photography
 		</div>
 	</div>
-	<Break/>
-	<h2>work experience</h2>
-	<Chip href="https://pulley.com/">software engineer at pulley (january 2025 - present)</Chip>
-	<Chip href="https://www.ptc.com/en/about/reality-lab">senior innovation engineer at the ptc reality lab (january 2021 - december 2024)</Chip>
-	<Chip href="https://credentials.mit.edu/certificate/9af1894af5f35a7bb8f7dcd45db591b7">b.s. computer science and engineering + b.s. comparative media studies (mit '21)</Chip>
-	<Break/>
-	<h2>side stuff</h2>
-    <Chip href="https://loresage.com/">creator of lore sage (march 2023 - july 2023)</Chip>
-	<Chip href="https://onward.games/">creator of onward! games (july 2022 - present)</Chip>
-    <Break/>
-	<h2>things i've made</h2>
-	<FullLink href="/games">games</FullLink>
-	<FullLink href="/dev">dev projects</FullLink>
-	<FullLink href="/3d">3d animations</FullLink>
+
+	<h2 class="section">Work experience</h2>
+	<ul class="entries">
+		<li>
+			<a href="https://pulley.com/">Software Engineer at Pulley</a>
+			<span class="when">January 2025 – present</span>
+		</li>
+		<li>
+			<a href="https://www.ptc.com/en/about/reality-lab">Senior Innovation Engineer at the PTC Reality Lab</a>
+			<span class="when">January 2021 – December 2024</span>
+		</li>
+		<li>
+			<a href="https://credentials.mit.edu/certificate/9af1894af5f35a7bb8f7dcd45db591b7">
+				B.S. Computer Science and Engineering + B.S. Comparative Media Studies
+			</a>
+			<span class="when">MIT '21</span>
+		</li>
+	</ul>
+
+	<h2 class="section">Side stuff</h2>
+	<ul class="entries">
+		<li>
+			<a href="https://loresage.com/">Creator of Lore Sage</a>
+			<span class="when">March 2023 – July 2023</span>
+		</li>
+		<li>
+			<a href="https://onward.games/">Creator of Onward! Games</a>
+			<span class="when">July 2022 – present</span>
+		</li>
+	</ul>
+
+	<h2 class="section">Things I've made</h2>
+	<div class="collections">
+		<a class="collection" href="/games">Games <span class="arrow">→</span></a>
+		<a class="collection" href="/dev">Dev projects <span class="arrow">→</span></a>
+		<a class="collection" href="/3d">3D animations <span class="arrow">→</span></a>
+	</div>
 </Layout>
 
 <style>
-    .info {
-        display: flex; 
-		flex-direction: row-reverse;
+	.hero {
+		display: flex;
 		align-items: center;
-		gap: 1.2em;
 		justify-content: space-between;
+		gap: 2rem;
+		margin: 2rem 0 2.5rem;
+	}
+	.hero-logo {
+		width: min(440px, 60vw);
+		height: auto;
+	}
+	.hero-photo {
+		border-radius: 8px;
+		border: 1px solid var(--line);
+		transform: rotate(2deg);
+		box-shadow: 2px 3px 0 var(--line);
+	}
+	.facts {
+		margin: 1.5rem 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+	.fact-label {
+		font-weight: 600;
+	}
+	.entries {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.when {
+		color: var(--ink-soft);
+		font-size: 0.85rem;
+		margin-left: 0.4em;
+		white-space: nowrap;
+	}
+	.collections {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.collection {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		text-decoration: none;
+		font-weight: 500;
+		padding: 0.7em 1em;
+		border: 1.5px dashed var(--sky-line);
+		border-radius: 6px;
+	}
+	.collection:hover {
+		border-style: solid;
+		background: var(--sky-tint);
+	}
+	.arrow {
+		transition: transform 0.15s;
+	}
+	.collection:hover .arrow {
+		transform: translateX(4px);
 	}
 	@media (max-width: 550px) {
-		.info {
+		.hero {
 			flex-direction: column;
-			align-items: start;
-			gap: 1em;
+			align-items: flex-start;
+			gap: 1.5rem;
 		}
 	}
 </style>

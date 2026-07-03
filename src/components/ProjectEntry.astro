@@ -1,0 +1,130 @@
+---
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import Youtube from './Youtube.astro';
+
+const { entry } = Astro.props;
+const { title, status, timeframe, media, links, files } = entry.data;
+const { Content } = await render(entry);
+
+const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+const statusClass =
+	status === 'completed' ? 'green' : status === 'abandoned' ? 'red' : 'amber';
+---
+
+<article class="project">
+	<header>
+		<h3>{title}</h3>
+		<span class={`badge ${statusClass}`}>{statusLabel}</span>
+		<span class="timeframe">{timeframe}</span>
+	</header>
+	<div class="body">
+		{
+			media.length > 0 && (
+				<div class="media">
+					{media.map((item) => {
+						if (item.type === 'image') {
+							return <Image src={item.src} alt={`Preview image for ${title}`} width={640} />;
+						}
+						if (item.type === 'video') {
+							return <video src={item.src} controls />;
+						}
+						return <Youtube src={item.src} title={title} />;
+					})}
+				</div>
+			)
+		}
+		<div class="description">
+			<Content />
+		</div>
+	</div>
+	{
+		(links.length > 0 || files.length > 0) && (
+			<div class="links">
+				{links.map((link) => (
+					<a href={link.href}>{link.text}</a>
+				))}
+				{files.map((file) => (
+					<a href={file.href} download>
+						↓ {file.text}
+					</a>
+				))}
+			</div>
+		)
+	}
+</article>
+
+<style>
+	header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.6em;
+		margin-bottom: 0.8rem;
+	}
+	h3 {
+		font-size: 1.35rem;
+		margin: 0;
+	}
+	.badge {
+		font-size: 0.75rem;
+		font-weight: 600;
+		padding: 0.15em 0.7em;
+		border-radius: 999px;
+		white-space: nowrap;
+	}
+	.badge.green {
+		color: #166534;
+		background: #dcfce7;
+	}
+	.badge.amber {
+		color: #92400e;
+		background: #fef3c7;
+	}
+	.badge.red {
+		color: #991b1b;
+		background: #fee2e2;
+	}
+	.timeframe {
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+	}
+	.body {
+		display: grid;
+		grid-template-columns: 300px 1fr;
+		gap: 1.5rem;
+		align-items: start;
+	}
+	.media {
+		display: flex;
+		flex-direction: column;
+		gap: 0.8rem;
+	}
+	.media :global(img),
+	.media video {
+		width: 100%;
+		height: auto;
+		border-radius: 6px;
+		border: 1px solid var(--line);
+	}
+	.description {
+		min-width: 0;
+	}
+	.description :global(p) {
+		margin: 0 0 0.8em;
+	}
+	.description :global(p:last-child) {
+		margin-bottom: 0;
+	}
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 1.2rem;
+		margin-top: 1rem;
+	}
+	@media (max-width: 640px) {
+		.body {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

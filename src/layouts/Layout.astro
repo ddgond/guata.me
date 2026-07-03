@@ -1,76 +1,103 @@
 ---
-import { ViewTransitions, slide } from 'astro:transitions';
-import Nav from "../components/Nav.astro";
+import '@fontsource-variable/inter';
+import Nav from '../components/Nav.astro';
 
-const { title } = Astro.props;
+interface Props {
+	title: string;
+	active: string;
+	showNavLogo?: boolean;
+}
+
+const { title, active, showNavLogo = true } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" transition:animate="none">
+<html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Astro description" />
+		{/* TODO(dan): write a meta description in your voice, e.g.
+		    <meta name="description" content="..." /> — one sentence about who you
+		    are and what's on the site, used by search results and link previews. */}
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>{title} - daniel dangond</title>
-		<script is:inline defer src="https://umami.guata.me/script.js" data-website-id="ef631cad-b113-4db7-8a3f-46045313c355"></script>
-		<ViewTransitions fallback="swap"/>
+		<title>{title} · Dan Dangond</title>
 	</head>
 	<body>
 		<main>
-		    <Nav title={title} />
-			<div transition:animate={slide({duration: '1s'})}>
-				<slot/>
-			</div>
+			<Nav active={active} showLogo={showNavLogo} />
+			<slot />
 		</main>
 	</body>
 </html>
+
 <style is:global>
 	:root {
-		--accent: 153, 204, 255; /* 99ccff */
-		--accent-light: 230, 242, 255; /* cce6ff */
-		--accent-dark: 31, 41, 51;
-		--accent-gradient: linear-gradient(
-			45deg,
-			rgb(var(--accent)),
-			rgb(var(--accent-light)) 30%,
-			white 60%
-		);
-		--background: 19, 19, 26;
+		--paper: #fbfaf6;
+		--ink: #1c1b18;
+		--ink-soft: #6b6861;
+		--line: #e5e1d8;
+		--sky: #0284c7;
+		--sky-deep: #075985;
+		--sky-tint: #e5f4fd;
+		--sky-line: #7dd3fc;
+	}
+	* {
+		box-sizing: border-box;
 	}
 	html {
-		font-family: system-ui, sans-serif;
-		background: rgb(var(--background));
-		box-sizing: border-box;
-		padding-bottom: 200px;
+		background: var(--paper);
+	}
+	body {
+		margin: 0;
+		font-family: 'Inter Variable', system-ui, sans-serif;
+		color: var(--ink);
+		line-height: 1.55;
 	}
 	main {
 		margin: auto;
-		padding: 1rem;
+		padding: 1.5rem 1rem 8rem;
 		width: 800px;
-		max-width: calc(100% - 2rem);
-		color: white;
-		line-height: 1.25;
+		max-width: 100%;
 	}
-	code {
-		font-family:
-			Menlo,
-			Monaco,
-			Lucida Console,
-			Liberation Mono,
-			DejaVu Sans Mono,
-			Bitstream Vera Sans Mono,
-			Courier New,
-			monospace;
+	h1,
+	h2,
+	h3 {
+		line-height: 1.2;
 	}
-	.red {
-		color: rgb(255, 180, 180);
+	/* Section heading with a hand-drawn underline stroke */
+	h2.section {
+		font-size: 1.5rem;
+		margin: 2.5rem 0 1rem;
+		padding-bottom: 0.4rem;
+		width: fit-content;
+		background:
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5 C 20 2, 40 7, 60 4 S 100 3, 118 5' fill='none' stroke='%237dd3fc' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E")
+			bottom left / 100% 8px no-repeat;
 	}
-	.orange {
-		color: rgb(255, 220, 180);
+	a {
+		color: var(--sky);
+		text-decoration-thickness: 1px;
+		text-underline-offset: 3px;
 	}
-	.green {
-		color: rgb(180, 255, 180);
+	a:hover {
+		color: var(--sky-deep);
+		background: var(--sky-tint);
+	}
+	/* Hand-drawn divider between big blocks of content */
+	.divider {
+		margin: 2.5rem auto;
+		height: 8px;
+		background:
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 8' preserveAspectRatio='none'%3E%3Cpath d='M2 4 C 50 2, 100 7, 150 4 S 250 2, 298 5' fill='none' stroke='%23d9d4c7' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+			center / 100% 8px no-repeat;
+	}
+	/* Visible marker for sections awaiting Dan's copy */
+	.placeholder {
+		border: 2px dashed var(--sky-line);
+		border-radius: 6px;
+		padding: 0.8em 1em;
+		color: var(--ink-soft);
+		font-style: italic;
 	}
 </style>
