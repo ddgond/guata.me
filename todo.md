@@ -1,0 +1,2 @@
+- Redesign site from scratch, use logo, add updated info, images, and new projects.
+  - For Claude: come up with a website design that matches the style of the generated logo. Set up the new site so that it's still easy to add content. Drop the all-lowercase vibe. Add missing functionality that would improve the editing experience. This should be a total makeover of the site, drop the web transitions too, it's kinda tacky and was just something I wanted to mess with. I will add updated info,images,projects after the redesign.
