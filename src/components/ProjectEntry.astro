@@ -1,11 +1,30 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import Youtube from './Youtube.astro';
 
 const { entry } = Astro.props;
 const { title, status, timeframe, media, links, files } = entry.data;
 const { Content } = await render(entry);
+
+// Optimized full-size renditions for the lightbox — the overlay shows at most
+// ~1400px wide, so a 1600px webp looks the same as the original at a fraction
+// of the bytes. Keyed by the original ImageMetadata.
+const fullImages = new Map(
+	await Promise.all(
+		media
+			.filter((item) => item.type === 'image')
+			.map(async (item) => [
+				item.src,
+				await getImage({
+					src: item.src,
+					width: Math.min(item.src.width, 1600),
+					format: 'webp',
+					quality: 85,
+				}),
+			])
+	)
+);
 
 const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
 const statusClass =
@@ -24,7 +43,11 @@ const statusClass =
 				<div class="media">
 					{media.map((item) => {
 						if (item.type === 'image') {
-							return <Image src={item.src} alt={`Preview image for ${title}`} width={640} />;
+							return (
+								<a data-lightbox={`Preview image for ${title}`} href={fullImages.get(item.src).src}>
+									<Image src={item.src} alt={`Preview image for ${title}`} width={640} />
+								</a>
+							);
 						}
 						if (item.type === 'video') {
 							return <video src={item.src} controls />;
@@ -99,6 +122,14 @@ const statusClass =
 		display: flex;
 		flex-direction: column;
 		gap: 0.8rem;
+	}
+	.media a {
+		display: block;
+		line-height: 0;
+		cursor: zoom-in;
+	}
+	.media a:hover {
+		background: none;
 	}
 	.media :global(img),
 	.media video {

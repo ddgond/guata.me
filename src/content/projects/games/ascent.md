@@ -1,6 +1,6 @@
 ---
 title: Ascent
-category: games
+categories: [games]
 status: completed
 timeframe: December 2018
 order: 4

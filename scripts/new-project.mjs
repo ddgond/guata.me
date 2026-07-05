@@ -39,16 +39,30 @@ if (existsSync(file)) {
 	process.exit(1);
 }
 
-// order = max + 1 within the category → new project renders first
-const maxOrder = readdirSync(categoryDir)
-	.filter((f) => f.endsWith('.md'))
-	.map((f) => Number(readFileSync(join(categoryDir, f), 'utf8').match(/^order:\s*(\d+)/m)?.[1] ?? 0))
+// order = max + 1 among projects in this category → new project renders first.
+// Projects can list multiple categories, so scan every directory and match on
+// the frontmatter rather than trusting the directory a file lives in.
+const maxOrder = CATEGORIES.flatMap((dir) => {
+	const d = join(CONTENT_DIR, dir);
+	if (!existsSync(d)) return [];
+	return readdirSync(d)
+		.filter((f) => f.endsWith('.md'))
+		.map((f) => readFileSync(join(d, f), 'utf8'));
+})
+	.filter((src) =>
+		src
+			.match(/^categories:\s*\[([^\]]*)\]/m)?.[1]
+			.split(',')
+			.map((c) => c.trim())
+			.includes(category)
+	)
+	.map((src) => Number(src.match(/^order:\s*(\d+)/m)?.[1] ?? 0))
 	.reduce((a, b) => Math.max(a, b), 0);
 
 const stub = `---
 title: ${title}
-category: ${category}
-status: in development # one of: completed | in development | experiment | abandoned
+categories: [${category}] # a project can appear on more than one page, e.g. [dev, games]
+status: active development # one of: completed | active development | experiment | abandoned
 timeframe: Month Year – present # freeform display text, e.g. "July 2025" or "July 2025 – present"
 order: ${maxOrder + 1} # higher numbers appear first on the page
 media: # any mix of the three types below, shown in order; delete unused examples

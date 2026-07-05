@@ -1,6 +1,6 @@
 ---
 title: MTA City Flow Visualization
-category: dev
+categories: [dev]
 status: completed
 timeframe: October 2024
 order: 8

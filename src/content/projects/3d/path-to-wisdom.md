@@ -1,6 +1,6 @@
 ---
 title: The Path to Wisdom
-category: 3d
+categories: [3d]
 status: completed
 timeframe: November 2021 – March 2022
 order: 3

@@ -1,6 +1,6 @@
 ---
 title: PoseNet Art
-category: dev
+categories: [dev]
 status: completed
 timeframe: December 21, 2020
 order: 1

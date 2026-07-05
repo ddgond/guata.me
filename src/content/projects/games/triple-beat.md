@@ -1,6 +1,6 @@
 ---
 title: Triple Beat
-category: games
+categories: [games]
 status: completed
 timeframe: July 2019
 order: 3

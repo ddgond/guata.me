@@ -1,2 +1,4 @@
-- Redesign site from scratch, use logo, add updated info, images, and new projects.
-  - For Claude: come up with a website design that matches the style of the generated logo. Set up the new site so that it's still easy to add content. Drop the all-lowercase vibe. Add missing functionality that would improve the editing experience. This should be a total makeover of the site, drop the web transitions too, it's kinda tacky and was just something I wanted to mess with. I will add updated info,images,projects after the redesign.
+New /geoguessr page (only linked to from Thing's I've made section and added line in intro: "If you're here for my GeoGuessr tools or tips, check out /geoguessr."
+ Link to GeoStats (geostats.guata.me)
+ Link to Russian Car Metas (russia.guata.me)
+ Blog Posts (To be written on memorizing area codes and memorizing kabupaten, new functionality on this site, new blog post script similar to new project script, support for drafts so they don't get published while I work on them) use /qa skill for this

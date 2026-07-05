@@ -1,6 +1,6 @@
 ---
 title: A Frozen World
-category: 3d
+categories: [3d]
 status: completed
 timeframe: May 2021
 order: 2

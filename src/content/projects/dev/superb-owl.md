@@ -1,6 +1,6 @@
 ---
 title: Superb Owl
-category: dev
+categories: [dev]
 status: completed
 timeframe: February 2024
 order: 6

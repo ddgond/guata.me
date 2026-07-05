@@ -1,6 +1,6 @@
 ---
 title: Recipes
-category: dev
+categories: [dev]
 status: completed
 timeframe: June 2022
 order: 3

@@ -1,6 +1,6 @@
 ---
 title: VR Avatar for Squeaksies
-category: 3d
+categories: [3d]
 status: completed
 timeframe: September 2018
 order: 1

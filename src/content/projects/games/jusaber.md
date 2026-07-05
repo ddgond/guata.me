@@ -1,6 +1,6 @@
 ---
 title: JuSaber
-category: games
+categories: [games]
 status: completed
 timeframe: February 2019
 order: 2

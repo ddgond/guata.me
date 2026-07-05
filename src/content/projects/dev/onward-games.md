@@ -1,8 +1,8 @@
 ---
 title: Onward! Games
-category: dev
-status: in development
-timeframe: July 2022 – present
+categories: [dev]
+status: completed
+timeframe: July 2022
 order: 4
 media:
   - type: image

@@ -1,6 +1,6 @@
 ---
 title: Jackmods
-category: dev
+categories: [dev]
 status: completed
 timeframe: October 21, 2020
 order: 2

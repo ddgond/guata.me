@@ -1,0 +1,52 @@
+{/* Full-screen image overlay. Any <a data-lightbox="alt text" href={fullImage}>
+    on the page opens its href in here instead of navigating; without JS the
+    link still works as a plain link to the image. */}
+<dialog id="lightbox">
+	<img alt="" />
+</dialog>
+
+<script>
+	const dialog = document.getElementById('lightbox') as HTMLDialogElement;
+	const img = dialog.querySelector('img')!;
+
+	// Clear the image on close so reopening doesn't flash the previous
+	// image while the new one loads
+	dialog.addEventListener('close', () => {
+		img.removeAttribute('src');
+		img.alt = '';
+	});
+
+	document.addEventListener('click', (e) => {
+		const link = (e.target as Element).closest?.('a[data-lightbox]');
+		if (link instanceof HTMLAnchorElement) {
+			e.preventDefault();
+			img.src = link.href;
+			img.alt = link.dataset.lightbox ?? '';
+			dialog.showModal();
+		} else if (dialog.open) {
+			// Any click while open — image, backdrop, anywhere — closes it.
+			// Escape already closes natively.
+			dialog.close();
+		}
+	});
+</script>
+
+<style>
+	dialog {
+		padding: 0;
+		border: none;
+		background: transparent;
+		max-width: none;
+		max-height: none;
+		cursor: zoom-out;
+	}
+	dialog img {
+		display: block;
+		max-width: min(94vw, 1400px);
+		max-height: 90vh;
+		border-radius: 6px;
+	}
+	dialog::backdrop {
+		background: rgba(28, 27, 24, 0.8);
+	}
+</style>

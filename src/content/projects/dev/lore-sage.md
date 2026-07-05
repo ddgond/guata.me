@@ -1,6 +1,6 @@
 ---
 title: Lore Sage
-category: dev
+categories: [dev]
 status: completed
 timeframe: March 2023 – July 2023
 order: 5

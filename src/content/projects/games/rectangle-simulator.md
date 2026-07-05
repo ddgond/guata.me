@@ -1,6 +1,6 @@
 ---
 title: Rectangle Simulator
-category: games
+categories: [games]
 status: completed
 timeframe: January 2020
 order: 1

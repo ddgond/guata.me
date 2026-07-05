@@ -6,8 +6,9 @@ const projects = defineCollection({
 	schema: ({ image }) =>
 		z.object({
 			title: z.string(),
-			category: z.enum(['games', 'dev', '3d']),
-			status: z.enum(['completed', 'in development', 'experiment', 'abandoned']),
+			// A project can appear on more than one page, e.g. [dev, games]
+			categories: z.array(z.enum(['games', 'dev', '3d'])).nonempty(),
+			status: z.enum(['completed', 'active development', 'experiment', 'abandoned']),
 			timeframe: z.string(),
 			// Higher numbers appear first on the page. `npm run new-project`
 			// assigns max+1 so new projects land on top.
