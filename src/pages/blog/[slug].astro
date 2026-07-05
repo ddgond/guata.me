@@ -1,0 +1,55 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { formatDate } from '../../posts';
+
+export async function getStaticPaths() {
+	// Drafts get pages in dev for previewing, never in production builds
+	const posts = await getCollection('posts', (post) => !(import.meta.env.PROD && post.data.draft));
+	return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Layout title={post.data.title} active="blog">
+	<a class="back" href="/blog">← Blog</a>
+	<h1>{post.data.title}</h1>
+	{
+		post.data.draft ? (
+			<p class="when draft-badge">draft</p>
+		) : (
+			<p class="when">{formatDate(post.data.pubDate!)}</p>
+		)
+	}
+	<Content />
+</Layout>
+
+<style>
+	.back {
+		display: inline-block;
+		margin-top: 1rem;
+		text-decoration: none;
+	}
+	h1 {
+		margin: 1rem 0 0.2rem;
+	}
+	.when {
+		margin: 0 0 2rem;
+		color: var(--ink-soft);
+		font-size: 0.9rem;
+	}
+	.draft-badge {
+		width: fit-content;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--sky-deep);
+		background: var(--sky-tint);
+		border: 1px solid var(--sky-line);
+		border-radius: 4px;
+		padding: 0.1em 0.4em;
+	}
+</style>

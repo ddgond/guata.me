@@ -1,0 +1,48 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PostList from '../components/PostList.astro';
+---
+
+<Layout title="GeoGuessr" active="geoguessr">
+	<h2 class="section">GeoGuessr</h2>
+	<p>
+		Here's a collection of tools and tips I've put together for studying and improving at
+		GeoGuessr. Best of luck!
+	</p>
+
+	<h2 class="section">Tools</h2>
+	<ul class="tools">
+		<li>
+			<a href="https://geostats.guata.me">GeoStats</a>
+			<p class="blurb">
+				A website and tool for identifying weak areas and opportunities for improvement for ranked
+				GeoGuessr gameplay.
+			</p>
+		</li>
+		<li>
+			<a href="https://russia.guata.me">Russian Car Metas</a>
+			<p class="blurb">
+				An easy-to-navigate version of finbarr's car meta doc that makes it easy to see where
+				months and cars overlap, making it much easier to reference and study.
+			</p>
+		</li>
+	</ul>
+
+	<PostList tag="geoguessr" heading="Posts" />
+</Layout>
+
+<style>
+	.tools {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+	}
+	.blurb {
+		margin: 0.2rem 0 0;
+		color: var(--ink-soft);
+		font-size: 0.9rem;
+	}
+</style>

@@ -1,0 +1,76 @@
+---
+import { getCollection } from 'astro:content';
+import { formatDate } from '../posts';
+
+interface Props {
+	// Only show posts carrying this tag; omit for all posts
+	tag?: string;
+	// Rendered above the list, and only when there's something to list
+	heading?: string;
+}
+
+const { tag, heading } = Astro.props;
+
+// Drafts render in dev (sorted to the top, badged) but never in production builds.
+const posts = (
+	await getCollection('posts', (post) => {
+		if (import.meta.env.PROD && post.data.draft) return false;
+		return !tag || post.data.tags.includes(tag);
+	})
+).sort(
+	(a, b) =>
+		Number(b.data.draft) - Number(a.data.draft) ||
+		(b.data.pubDate?.getTime() ?? 0) - (a.data.pubDate?.getTime() ?? 0)
+);
+---
+
+{heading && posts.length > 0 && <h2 class="section">{heading}</h2>}
+<ul class="posts">
+	{
+		posts.map((post) => (
+			<li>
+				<a href={`/blog/${post.id}`}>{post.data.title}</a>
+				{post.data.draft ? (
+					<span class="draft-badge">draft</span>
+				) : (
+					<span class="when">{formatDate(post.data.pubDate!)}</span>
+				)}
+				{post.data.description && <p class="blurb">{post.data.description}</p>}
+			</li>
+		))
+	}
+</ul>
+
+<style>
+	.posts {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+	}
+	.when {
+		color: var(--ink-soft);
+		font-size: 0.85rem;
+		margin-left: 0.4em;
+		white-space: nowrap;
+	}
+	.draft-badge {
+		margin-left: 0.4em;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--sky-deep);
+		background: var(--sky-tint);
+		border: 1px solid var(--sky-line);
+		border-radius: 4px;
+		padding: 0.1em 0.4em;
+	}
+	.blurb {
+		margin: 0.2rem 0 0;
+		color: var(--ink-soft);
+		font-size: 0.9rem;
+	}
+</style>

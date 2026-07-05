@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PostList from '../../components/PostList.astro';
+---
+
+<Layout title="Blog" active="blog">
+	<div class="heading-row">
+		<h2 class="section">Blog</h2>
+		<a class="rss" href="/rss.xml">RSS</a>
+	</div>
+	<PostList />
+</Layout>
+
+<style>
+	.heading-row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+	.rss {
+		font-size: 0.85rem;
+	}
+</style>
