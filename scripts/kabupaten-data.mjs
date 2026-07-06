@@ -24,9 +24,9 @@ const OUTPUT = new URL('../public/data/kabupaten.json', import.meta.url).pathnam
 // shapes whose isGeo flag lags their GeoGuessr coverage.
 const EXCLUDE = new Set([
 	196, 55, 195, 197, 90, 184, 203, 201, 204, 202, 205, 228, 272, 269, 225, 271, 224, 226, 231,
-	227, 152, 151, 147, 68, 262, 257, 258, 261, 260, 259, 67, 313, 440, 459, 12,
+	227, 152, 151, 147, 68, 262, 257, 258, 261, 260, 259, 67, 313, 440, 459,
 ]);
-const INCLUDE = new Set([396, 7, 3, 148, 149]);
+const INCLUDE = new Set([396, 7, 3, 148, 149, 12]);
 
 // Excluded kota that sit inside a same-named kabupaten get dissolved into it
 // ("Kota Kupang" → "Kupang"). These have no same-named parent, so instead of
@@ -58,8 +58,9 @@ const RENAME = {
 	317: 'Mempawah', // Kabupaten Pontianak was renamed Mempawah in 2014
 	232: 'Kota Banjar', // distinguish the Jawa Barat city from Kab. Banjar (Kalimantan Selatan)
 };
-// The quiz's 399, plus the promoted kota, minus the nested kota dissolved away
-const EXPECTED_COUNT = 399 + PROMOTE.size - MERGE_NESTED.size;
+// The quiz's 399, plus Gayo Lues (12, coverage newer than the quiz), plus the
+// promoted kota, minus the nested kota dissolved away
+const EXPECTED_COUNT = 400 + PROMOTE.size - MERGE_NESTED.size;
 
 console.log(`Fetching ${SOURCE} ...`);
 const source = await (await fetch(SOURCE)).json();
@@ -85,6 +86,14 @@ source.features.forEach((feature, i) => {
 if (included.length !== EXPECTED_COUNT) {
 	throw new Error(`Expected ${EXPECTED_COUNT} kabupaten, got ${included.length} — source data changed?`);
 }
+
+// Bintan administratively includes the Tambelan islands ~350 km east of the
+// rest of Kepulauan Riau, which forces the province view to zoom way out.
+// They have no coverage, so drop every polygon east of longitude 107.
+const bintan = included.find((f) => f.properties.name === 'Bintan');
+bintan.geometry.coordinates = bintan.geometry.coordinates.filter((polygon) =>
+	polygon[0].every(([lon]) => lon < 107),
+);
 
 // Dissolve excluded kota into their parent kabupaten instead of leaving holes
 const merged = [];
