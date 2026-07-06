@@ -1,0 +1,472 @@
+---
+// Interactive find-on-map quiz over Indonesia's kabupaten, replicating the
+// helloquiz.app "Indonesia Kabupaten Geoguessr only" quiz (405 shapes, GADM
+// boundaries). Geometry loads once per page from /data/kabupaten.json
+// (regenerate with scripts/kabupaten-data.mjs) and each instance initializes
+// lazily when scrolled into view.
+//
+// scope="province" | "region" — dropdown to pick a province / region group
+// scope="all"                 — the full 399-kabupaten map, no dropdown
+// initial                     — dropdown preselection (province name or region key)
+
+interface Props {
+	scope: 'province' | 'region' | 'all';
+	initial?: string;
+}
+
+const { scope, initial } = Astro.props;
+---
+
+<kabupaten-quiz data-scope={scope} data-initial={initial}>
+	<div class="bar top">
+		{scope !== 'all' && <select class="picker" aria-label={`Choose a ${scope}`}></select>}
+		<button class="start" disabled>Start Quiz</button>
+	</div>
+	<div class="bar status" aria-live="polite">loading map…</div>
+	<div class="map-wrap">
+		<div class="map"></div>
+		<div class="name-tip" hidden></div>
+	</div>
+	<div class="bar options">
+		<label><input type="checkbox" class="borders" checked /> Borders</label>
+		<label><input type="checkbox" class="labels" /> Labels</label>
+	</div>
+</kabupaten-quiz>
+
+<script>
+	import L from 'leaflet';
+	import 'leaflet/dist/leaflet.css';
+	import type { Feature, MultiPolygon, Polygon } from 'geojson';
+
+	type KabFeature = Feature<Polygon | MultiPolygon, { name: string; province: string }>;
+
+	// The basemap tiles helloquiz uses: Google's roadmap endpoint, in a labeled
+	// and a label-free variant (the second styles all label elements off).
+	const TILES_LABELS =
+		'https://www.google.com/maps/vt?pb=!1m7!8m6!1m3!1i{z}!2i{x}!3i{y}!2i9!3x1!2m2!1e0!2sm!3m3!2sen!3suk!5e18!4e0!5m4!1e0!8m2!1e1!1e1!6m6!1e12!2i2!11e0!39b0!44e0!50e0';
+	const TILES_NO_LABELS =
+		'https://www.google.com/maps/vt?pb=!1m5!1m4!1i{z}!2i{x}!3i{y}!4i256!2m2!1e0!2sm!3m17!2sen!3sUK!5e18!12m4!1e68!2m2!1sset!2sRoadmap!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2ss.e:l%7Cp.v:off,s.t:1%7Cs.e:g.s%7Cp.v:off!5m1!5f1';
+	const ATTRIBUTION =
+		'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a> via <a href="https://helloquiz.app">helloquiz</a>';
+
+	// Region groupings for scope="region", following the packs Dan drilled with
+	const REGIONS: Record<string, { label: string; provinces: string[] }> = {
+		sumatra: {
+			label: 'Sumatra',
+			provinces: [
+				'Aceh',
+				'Sumatera Utara',
+				'Sumatera Barat',
+				'Riau',
+				'Kepulauan Riau',
+				'Jambi',
+				'Bengkulu',
+				'Sumatera Selatan',
+				'Kepulauan Bangka Belitung',
+				'Lampung',
+			],
+		},
+		java: {
+			label: 'Java',
+			provinces: [
+				'Banten',
+				'DKI Jakarta',
+				'Jawa Barat',
+				'Jawa Tengah',
+				'Daerah Istimewa Yogyakarta',
+				'Jawa Timur',
+			],
+		},
+		kalimantan: {
+			label: 'Kalimantan',
+			provinces: [
+				'Kalimantan Barat',
+				'Kalimantan Tengah',
+				'Kalimantan Selatan',
+				'Kalimantan Timur',
+				'Kalimantan Utara',
+			],
+		},
+		sulawesi: {
+			label: 'Sulawesi',
+			provinces: [
+				'Sulawesi Utara',
+				'Gorontalo',
+				'Sulawesi Tengah',
+				'Sulawesi Barat',
+				'Sulawesi Selatan',
+				'Sulawesi Tenggara',
+			],
+		},
+		nusas: {
+			label: 'Bali & Nusa Tenggara',
+			provinces: ['Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur'],
+		},
+		maluku: { label: 'Maluku Utara', provinces: ['Maluku Utara'] },
+	};
+
+	const STROKE = '#075985';
+	const FLASH_MS = 700;
+
+	let dataPromise: Promise<KabFeature[]> | null = null;
+	const loadData = () =>
+		(dataPromise ??= fetch('/data/kabupaten.json')
+			.then((r) => r.json())
+			.then((geojson) => geojson.features as KabFeature[]));
+
+	const shuffle = <T,>(items: T[]) => {
+		for (let i = items.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[items[i], items[j]] = [items[j], items[i]];
+		}
+		return items;
+	};
+
+	class KabupatenQuiz extends HTMLElement {
+		map!: L.Map;
+		geoLayer: L.GeoJSON | null = null;
+		layers: { layer: L.Path; feature: KabFeature }[] = [];
+		status!: HTMLElement;
+		startButton!: HTMLButtonElement;
+		bordersBox!: HTMLInputElement;
+		nameTip!: HTMLElement;
+
+		// Quiz state
+		mode: 'explore' | 'quiz' = 'explore';
+		queue: KabFeature[] = [];
+		current: KabFeature | null = null;
+		awaiting: 'answer' | 'confirm' = 'answer';
+		missed = new Set<KabFeature>();
+		firstTry = new Set<KabFeature>();
+		// Post-quiz review tint per shape: green for first-try, red for missed
+		review = new Map<KabFeature, string>();
+		completed = 0;
+		total = 0;
+		revealed: { layer: L.Path; feature: KabFeature } | null = null;
+
+		connectedCallback() {
+			const observer = new IntersectionObserver(
+				(entries) => {
+					if (entries.some((entry) => entry.isIntersecting)) {
+						observer.disconnect();
+						this.init();
+					}
+				},
+				{ rootMargin: '300px' },
+			);
+			observer.observe(this);
+		}
+
+		async init() {
+			this.status = this.querySelector('.status')!;
+			this.startButton = this.querySelector('.start')!;
+			this.bordersBox = this.querySelector('.borders')!;
+			this.nameTip = this.querySelector('.name-tip')!;
+			const labelsBox = this.querySelector<HTMLInputElement>('.labels')!;
+			const picker = this.querySelector<HTMLSelectElement>('.picker');
+
+			const features = await loadData();
+
+			this.map = L.map(this.querySelector<HTMLElement>('.map')!, {
+				attributionControl: true,
+				zoomSnap: 0.5,
+				maxZoom: 15,
+				minZoom: 3,
+			});
+			this.map.attributionControl.setPrefix(false);
+			// The tip is anchored to a container point, so it goes stale as soon
+			// as the view changes; hide it and let the next mousemove replace it
+			this.map.on('movestart zoomstart', () => (this.nameTip.hidden = true));
+
+			const labeled = L.tileLayer(TILES_LABELS, { attribution: ATTRIBUTION, maxZoom: 15 });
+			const unlabeled = L.tileLayer(TILES_NO_LABELS, { attribution: ATTRIBUTION, maxZoom: 15 });
+			unlabeled.addTo(this.map);
+			labelsBox.addEventListener('change', () => {
+				this.map.removeLayer(labelsBox.checked ? unlabeled : labeled);
+				this.map.addLayer(labelsBox.checked ? labeled : unlabeled);
+			});
+
+			this.bordersBox.addEventListener('change', () => this.restyleAll());
+
+			const scopes = (): KabFeature[] => {
+				if (!picker) return features;
+				if (this.dataset.scope === 'province')
+					return features.filter((f) => f.properties.province === picker.value);
+				return features.filter((f) =>
+					REGIONS[picker.value].provinces.includes(f.properties.province),
+				);
+			};
+
+			if (picker) {
+				const options =
+					this.dataset.scope === 'province'
+						? [...new Set(features.map((f) => f.properties.province))]
+								.sort()
+								.map((p) => ({ value: p, label: p }))
+						: Object.entries(REGIONS).map(([key, r]) => ({ value: key, label: r.label }));
+				for (const { value, label } of options) picker.add(new Option(label, value));
+				if (this.dataset.initial) picker.value = this.dataset.initial;
+				picker.addEventListener('change', () => this.setScope(scopes()));
+			}
+
+			this.startButton.addEventListener('click', () => {
+				if (this.mode === 'quiz') this.endQuiz();
+				else this.startQuiz();
+			});
+
+			this.setScope(scopes());
+			this.startButton.disabled = false;
+		}
+
+		setScope(features: KabFeature[]) {
+			this.endQuiz(true);
+			this.review.clear();
+			this.geoLayer?.remove();
+			this.layers = [];
+			this.geoLayer = L.geoJSON(features, {
+				style: () => this.styleFor(null),
+				onEachFeature: (feature: KabFeature, layer) => {
+					const path = layer as L.Path;
+					this.layers.push({ layer: path, feature });
+					layer.on('mouseover', () => this.hover(path, feature, true));
+					layer.on('mousemove', (e) => this.moveTip(e as L.LeafletMouseEvent, feature));
+					layer.on('mouseout', () => this.hover(path, feature, false));
+					layer.on('click', (e) => this.clicked(path, feature, e as L.LeafletMouseEvent));
+				},
+			}).addTo(this.map);
+			this.map.fitBounds(this.geoLayer.getBounds().pad(0.05));
+			this.status.textContent = '';
+		}
+
+		// --- styling ---------------------------------------------------------
+
+		styleFor(feature: KabFeature, flash: string | null = null): L.PathOptions {
+			const borders = this.bordersBox.checked;
+			const tint = flash ?? this.review.get(feature) ?? null;
+			return {
+				color: STROKE,
+				weight: 1.2,
+				opacity: borders ? 0.9 : 0,
+				fillColor: tint ?? '#000',
+				// Transparent black tint alongside borders; with borders off the
+				// fill stays invisible but keeps shapes clickable. Flash and
+				// review colors show regardless of the Borders toggle.
+				fillOpacity: flash ? 0.5 : tint ? 0.35 : borders ? 0.12 : 0,
+				fill: true,
+			};
+		}
+
+		restyleAll() {
+			for (const { layer, feature } of this.layers) {
+				const isRevealed = this.revealed?.layer === layer;
+				layer.setStyle(this.styleFor(feature, isRevealed ? 'gold' : null));
+			}
+		}
+
+		flash(layer: L.Path, feature: KabFeature, color: string) {
+			layer.setStyle(this.styleFor(feature, color));
+			setTimeout(() => {
+				if (this.revealed?.layer !== layer) layer.setStyle(this.styleFor(feature));
+			}, FLASH_MS);
+		}
+
+		hover(layer: L.Path, feature: KabFeature, over: boolean) {
+			if (!over) this.nameTip.hidden = true;
+			if (this.revealed?.layer === layer) return;
+			// No hover highlight with borders off — it would give shapes away
+			// during the no-borders drill stage
+			if (over && this.bordersBox.checked) {
+				const style = this.styleFor(feature);
+				layer.setStyle({ ...style, fillOpacity: (style.fillOpacity ?? 0) + 0.16 });
+			} else layer.setStyle(this.styleFor(feature));
+		}
+
+		// Hand-rolled name tooltip: Leaflet's bindTooltip leaks focus handlers
+		// when unbound (Leaflet #8297), and we'd be rebinding every quiz start
+		showTip(event: L.LeafletMouseEvent, name: string) {
+			this.nameTip.textContent = name;
+			this.nameTip.style.left = `${event.containerPoint.x + 14}px`;
+			this.nameTip.style.top = `${event.containerPoint.y + 14}px`;
+			this.nameTip.hidden = false;
+		}
+
+		moveTip(event: L.LeafletMouseEvent, feature: KabFeature) {
+			if (this.mode !== 'explore') {
+				this.nameTip.hidden = true;
+				return;
+			}
+			this.showTip(event, feature.properties.name);
+		}
+
+		// --- quiz ------------------------------------------------------------
+
+		startQuiz() {
+			this.mode = 'quiz';
+			this.queue = shuffle(this.layers.map((entry) => entry.feature));
+			this.total = this.queue.length;
+			this.missed.clear();
+			this.firstTry.clear();
+			this.review.clear();
+			this.completed = 0;
+			this.revealed = null;
+			this.nameTip.hidden = true;
+			this.startButton.textContent = 'End Quiz';
+			this.restyleAll();
+			this.nextQuestion();
+		}
+
+		endQuiz(silent = false) {
+			if (this.mode === 'quiz') {
+				// Review tint: what you got on the first try vs. what you missed
+				for (const feature of this.firstTry) this.review.set(feature, '#16a34a');
+				for (const feature of this.missed) this.review.set(feature, '#dc2626');
+			}
+			this.mode = 'explore';
+			this.current = null;
+			this.revealed = null;
+			this.startButton.textContent = 'Start Quiz';
+			if (this.layers.length) this.restyleAll();
+			if (!silent) this.status.textContent = '';
+		}
+
+		nextQuestion() {
+			this.revealed = null;
+			this.awaiting = 'answer';
+			const next = this.queue.shift();
+			if (!next) {
+				const score = this.total - this.missed.size;
+				this.endQuiz(true);
+				this.status.textContent = `Final score: ${score}/${this.total} on the first try.`;
+				return;
+			}
+			this.current = next;
+			this.showPrompt();
+		}
+
+		showPrompt() {
+			this.status.innerHTML = '';
+			this.status.append('Find ');
+			const name = document.createElement('strong');
+			name.textContent = this.current!.properties.name;
+			this.status.append(name, `. · ${this.completed}/${this.total}`);
+		}
+
+		clicked(layer: L.Path, feature: KabFeature, event: L.LeafletMouseEvent) {
+			if (this.mode !== 'quiz' || !this.current) return;
+
+			if (this.awaiting === 'confirm') {
+				if (this.revealed?.feature === feature) {
+					const target = this.revealed;
+					this.revealed = null;
+					this.flash(target.layer, target.feature, 'gold');
+					this.queue.push(this.current);
+					this.nextQuestion();
+				} else {
+					// Let the player probe adjacent shapes for their names while
+					// the answer is highlighted
+					this.showTip(event, feature.properties.name);
+				}
+				return;
+			}
+
+			if (feature.properties.name === this.current.properties.name) {
+				if (!this.missed.has(this.current)) this.firstTry.add(this.current);
+				this.flash(layer, feature, '#16a34a');
+				this.completed++;
+				this.nextQuestion();
+			} else {
+				this.missed.add(this.current);
+				this.flash(layer, feature, '#dc2626');
+				const target = this.layers.find((entry) => entry.feature === this.current)!;
+				this.revealed = target;
+				target.layer.setStyle(this.styleFor(target.feature, 'gold'));
+				this.awaiting = 'confirm';
+				this.status.innerHTML = '';
+				const guess = document.createElement('strong');
+				guess.textContent = feature.properties.name;
+				const name = document.createElement('strong');
+				name.textContent = this.current.properties.name;
+				this.status.append('That was ', guess, '. ', name, ' is highlighted. Click it to continue.');
+			}
+		}
+	}
+
+	customElements.define('kabupaten-quiz', KabupatenQuiz);
+</script>
+
+<style>
+	kabupaten-quiz {
+		display: block;
+		margin: 1.5rem 0;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		overflow: hidden;
+	}
+	.map-wrap {
+		position: relative;
+	}
+	.map {
+		aspect-ratio: 4 / 5;
+		background: #a2daf2;
+	}
+	.name-tip {
+		position: absolute;
+		z-index: 700; /* above Leaflet's overlay panes */
+		padding: 0.1em 0.45em;
+		background: var(--paper);
+		border: 1px solid var(--line);
+		border-radius: 4px;
+		font-size: 0.85rem;
+		pointer-events: none;
+		white-space: nowrap;
+	}
+	.bar {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		padding: 0.5rem 0.8rem;
+		font-size: 0.9rem;
+	}
+	.bar.top {
+		justify-content: space-between;
+		border-bottom: 1px solid var(--line);
+	}
+	.bar.options {
+		border-top: 1px solid var(--line);
+		color: var(--ink-soft);
+	}
+	.bar.status {
+		display: block;
+		border-bottom: 1px solid var(--line);
+		min-height: 2.4em;
+	}
+	.bar.status:empty {
+		display: none;
+	}
+	.picker,
+	.start {
+		font: inherit;
+		color: inherit;
+		background: none;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		padding: 0.2em 0.6em;
+	}
+	.start {
+		margin-left: auto;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.start:hover:not(:disabled) {
+		border-color: var(--sky-line);
+	}
+	.start:disabled {
+		opacity: 0.5;
+	}
+	.options label {
+		display: flex;
+		align-items: center;
+		gap: 0.35em;
+		cursor: pointer;
+	}
+</style>

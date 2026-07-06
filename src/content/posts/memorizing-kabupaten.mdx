@@ -6,6 +6,42 @@ draft: true # drafts render in dev but are excluded from production builds
 # pubDate is stamped by `npm run blog -- publish memorizing-kabupaten`
 ---
 
-Write the post here — planned topic from todo.md: how you memorize Indonesian
-kabupaten for GeoGuessr. It's markdown, so paragraphs, links, and formatting
-all work. Delete these instructions when done.
+import KabupatenQuiz from '../../components/KabupatenQuiz.astro';
+
+{/*
+	Write the post here — how you memorize Indonesian kabupaten for GeoGuessr.
+	Raw material from your Discord explanation, to rework in your own words:
+
+	- Kabs are much easier to pick up than area codes.
+	- Learn province by province rather than brute-forcing all at once.
+	- Normal mode first, anki mode once consistent.
+	- Progression: borders only (no labels) until 100% → no borders, no
+	  labels until 100% → no borders with labels enabled. Trains shape
+	  recognition and fast zooming without relying on reading text.
+	- After each province's region is done, add grouped packs (all Java,
+	  all Sula, all Nusas...) so placement works without province context.
+	- Only then the full kabupaten pack.
+
+	The three quizzes below are live — write around them. Each supports the
+	borders/labels toggles, so you can walk the reader through the exact
+	progression next to a map they can try it on. Hovering shapes shows
+	names until the quiz starts; wrong guesses highlight the answer in
+	yellow and come back around until placed correctly.
+
+	Somewhere in the post, credit where this comes from: quiz replicates
+	helloquiz.app's "Indonesia Kabupaten Geoguessr only" quiz
+	(https://helloquiz.app/quiz/1eV4Nh3ZbpDJ — link readers there for anki
+	mode / serious drilling), boundaries from gadm.org.
+*/}
+
+{/* Step 1: single province. `initial` picks the default; dropdown has all 30. */}
+
+<KabupatenQuiz scope="province" initial="Banten" />
+
+{/* Step 2: grouped regions — dropdown has sumatra/java/kalimantan/sulawesi/nusas/maluku. */}
+
+<KabupatenQuiz scope="region" initial="java" />
+
+{/* Step 3: all 405 kabupaten. */}
+
+<KabupatenQuiz scope="all" />
