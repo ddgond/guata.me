@@ -8,42 +8,38 @@ draft: true # drafts render in dev but are excluded from production builds
 
 import KabupatenQuiz from '../../components/KabupatenQuiz.astro';
 
-{/*
-	Write the post here — how you memorize Indonesian kabupaten for GeoGuessr.
-	Raw material from your Discord explanation, to rework in your own words:
+Learning how to find every kabupaten (regency) on the map is the single easiest way to get 5Ks reliably and quickly in Indonesia. Kabupaten are mentioned on signs throughout the country, and finding the right kecamatan within each one is some of the easiest scanning you'll do in your life.
 
-	- Kabs are much easier to pick up than area codes.
-	- Learn province by province rather than brute-forcing all at once.
-	- Normal mode first, anki mode once consistent.
-	- Progression: borders only (no labels) until 100% → no borders, no
-	  labels until 100% → no borders with labels enabled. Trains shape
-	  recognition and fast zooming without relying on reading text.
-	- After each province's region is done, add grouped packs (all Java,
-	  all Sula, all Nusas...) so placement works without province context.
-	- Only then the full kabupaten pack.
+There is a simple process for learning the location of every kabupaten without breaking your brain in the process. We'll start with memorizing them one province at a time, then move to locating them within a larger region (say, all of Java, or all of Sumatra), then move to locating them in the context of the full Indonesia map. With this process, I estimate it'll take at most 20 minutes per province, totaling (at most) 10 hours of study, though in practice, many of these provinces are small enough to learn in 5 minutes when using my method. Plus, you can always stop partway through, you do *not* need to do this all in one go.
 
-	The three quizzes below are live — write around them. Each supports the
-	borders/labels toggles, so you can walk the reader through the exact
-	progression next to a map they can try it on. Hovering shapes shows
-	names until the quiz starts; wrong guesses highlight the answer in
-	yellow and come back around until placed correctly.
+I've included inline quizzes within this post for you to practice against at your own pace. However, I highly recommend going to [helloquiz](https://helloquiz.app/) afterwards and adding the anki versions of each quiz to your deck so that you can get daily quizzes that target your weak spots. The boundary data used here comes primarily from the ["Indonesia Kabupaten Geoguessr only" quiz](https://helloquiz.app/quiz/1eV4Nh3ZbpDJ), and acing that will be our target.
 
-	Somewhere in the post, credit where this comes from: quiz replicates
-	helloquiz.app's "Indonesia Kabupaten Geoguessr only" quiz
-	(https://helloquiz.app/quiz/1eV4Nh3ZbpDJ — link readers there for anki
-	mode / serious drilling), boundaries from gadm.org.
-*/}
+# Step I: Province by Province
 
-Learning how to find every kabupaten (regency) on the map is the single easiest way to get 5Ks reliably and quickly in Indonesia. Kabupaten are mentioned on signs throughout the country, and finding the right kecamatan within each one is some of the easiest scanning you'll do in your life. Here, I lay out a simple process for learning the location of every kabupaten without breaking your brain in the process. We'll start with memorizing them one region at a time, then move to locating them within a larger region (say, all of Java, or all of Sumatra), then move to locating them in the context of the full Indonesia map. With this process, I estimate it'll take at most 20 minutes per province, totaling (at most) 10 hours of study, though in practice, many of these provinces are small enough to learn in 5 minutes when using my method. Plus, you can always stop partway through, you do *not* need to do this all in one go.
+Here, I'll introduce the method we'll use for learning every kabupaten within every province. This approach ensures you can find the location quickly without thinking too hard or relying on scanning the map. The core of the approach is spamming a kabupaten quiz for the province you're studying, but with different settings. Completing all three stages should be doable within 20 minutes for any Indonesian province, especially as you get into the flow of things.
 
-{/* Step 1: single province. `initial` picks the default; dropdown has all 30. */}
+First, spam the quiz with borders on but (importantly) labels *disabled*. You want to train your recognition of the relative location of each kabupaten without relying on scanning. This allows you to find kabupaten *fast*, since you know exactly where to zoom in as soon as you see the name. This will be the longest of the three quizes we'll do for each province, since you'll be picking up kabupaten names at the same time.
+
+Once you're consistently getting 100% on the quiz, turn off borders and leave labels disabled as well. This round is meant to be hard, but it really helps ensure you remember the shapes and relative positions of each kabupaten. This will be harder than doing this in game, since you will have labels to guide you there, but the labels are a crutch. This way, you don't have to remember which kabupaten are findable on the map, since you can find any kabupaten without a labeled location visible just by using roads, coastlines, or map coloring as reference.
+
+Finally, once you're consistently getting 100% on that quiz, turn labels on and see if they help you find certain tricky provinces more easily. You should be able to 100% this right away without spamming it, but give it a few rounds to really solidify what you've learned.
+
+The quiz below allows you to test yourself on each province in Indonesia. Go through them at your own pace, following the method outlined above.
 
 <KabupatenQuiz scope="province" initial="Banten" />
 
-{/* Step 2: grouped regions — dropdown has sumatra/java/kalimantan/sulawesi/nusas/maluku. */}
+# Step II: Region by Region
+
+At this point, you can likely already quickly pinpoint 80+% of kabupaten on the Indonesia map just from the name. However, there are probably a few that require a bit of thought before you can recall which province they belonged to (or that you still get wrong without knowing the province first). This step tackles that problem by making you learn to identify them within the greater region they belong to.
+
+It is probably overkill to go through all three modes for each region here, but I would still recommend doing it. Feel free to skip it if you feel short on time for whatever reason (it's just a game, you don't have to rush this). If you do want to skip the whole three-mode approach, I recommend doing these quizzes with only labels (again, reflecting what you'll see in a match).
 
 <KabupatenQuiz scope="region" initial="java" />
 
-{/* Step 3: all 405 kabupaten. */}
+# Step III: Indonesia
+
+This is for that last bit of sanity checking to ensure you really can recall any kabupaten off the top of your head with zero context. You do not need to do this without labels (you're welcome to try, I won't stop you), though I do recommend doing this without borders. Once you've aced this, you can safely say you've got every kabupaten memorized.
+
+Again, [here is the helloquiz version](https://helloquiz.app/quiz/1eV4Nh3ZbpDJ) for adding to your anki deck on the site and getting targeted practice for your weak spots.
 
 <KabupatenQuiz scope="all" />
