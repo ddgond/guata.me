@@ -1,0 +1,555 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { digitLetters, mnemonics } from '../../data/mnemonics';
+
+// '319' → 'CAN': each digit's letter under the Dominic System mapping
+const lettersFor = (number: string) =>
+	number
+		.split('')
+		.map((digit) => digitLetters[Number(digit)])
+		.join('');
+
+// Example result shown greyed-out until the reader types a code of their own
+const byNumber = new Map(mnemonics.map((m) => [m.number, m]));
+const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumber.get('19')!.action}`;
+---
+
+<Layout
+	title="Dominic System Builder"
+	active="geoguessr"
+	description="Build and customize your own Dominic System mnemonic list, with import/export so you can edit it anywhere."
+>
+	<h2 class="section">Dominic System Builder</h2>
+	<p>
+		Use this tool to build your own set of mnemonics for use with the Dominic System. For details
+		on how to set up and use the Dominic System, read <a href="/blog/memorizing-area-codes">On
+			Memorizing Area Codes</a>. All changes made here auto-save and will be reloaded when you
+		return.
+	</p>
+
+	<div class="controls">
+		<button id="dominic-import" type="button">Import file</button>
+		<button id="dominic-export" type="button">Export file</button>
+		<button id="dominic-copy" type="button">Copy</button>
+		<button id="dominic-paste" type="button">Paste</button>
+		<span class="spacer"></span>
+		<button id="dominic-reset" type="button">Reset to Dan's list</button>
+		<button id="dominic-clear" type="button">Clear all</button>
+		<input id="dominic-file" type="file" accept=".dominic,text/plain" hidden />
+	</div>
+	<p id="dominic-status" class="status" aria-live="polite"></p>
+	<div id="dominic-paste-fallback" class="paste-fallback" hidden>
+		<textarea
+			id="dominic-paste-text"
+			rows="6"
+			placeholder={'OABCDESGHN\n00 - Ozzy Osborne / shredding on a guitar\n...'}></textarea>
+		<button id="dominic-paste-confirm" type="button">Import pasted text</button>
+	</div>
+
+	<div class="mnemonics">
+		<ul id="dominic-mapping" class="mapping" aria-label="Digit to letter mapping">
+			{
+				digitLetters.split('').map((letter, digit) => (
+					<li>
+						<span>{digit}</span>
+						<input value={letter} maxlength="1" aria-label={`Letter for digit ${digit}`} />
+					</li>
+				))
+			}
+		</ul>
+
+		<div class="box">
+			<p class="try">
+				<input
+					id="dominic-lookup"
+					inputmode="numeric"
+					maxlength="3"
+					placeholder="319"
+					autocomplete="off"
+					aria-label="Type a 2- or 3-digit code"
+				/>
+			</p>
+			<p id="dominic-result" class="result hint" aria-live="polite">{exampleResult}</p>
+			<hr />
+
+			<ul id="dominic-entries" class="entries">
+				{
+					mnemonics.map((m) => (
+						<li data-number={m.number}>
+							<span class="code">
+								{m.number} • <span class="letters">{lettersFor(m.number)}</span>
+							</span>
+							<input class="person" value={m.person} aria-label={`Person for ${m.number}`} />
+							<input class="action" value={m.action} aria-label={`Action for ${m.number}`} />
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { digitLetters as defaultLetters, mnemonics as defaultMnemonics } from '../../data/mnemonics';
+
+	const STORAGE_KEY = 'dominic-system';
+	const defaults = new Map(defaultMnemonics.map((m) => [m.number, m]));
+
+	interface Row {
+		el: HTMLElement;
+		person: HTMLInputElement;
+		action: HTMLInputElement;
+		letters: HTMLElement;
+	}
+	const rows = new Map<string, Row>();
+	document.querySelectorAll<HTMLElement>('#dominic-entries [data-number]').forEach((el) => {
+		rows.set(el.dataset.number!, {
+			el,
+			person: el.querySelector<HTMLInputElement>('.person')!,
+			action: el.querySelector<HTMLInputElement>('.action')!,
+			letters: el.querySelector<HTMLElement>('.letters')!,
+		});
+	});
+	const letterInputs = Array.from(
+		document.querySelectorAll<HTMLInputElement>('#dominic-mapping input')
+	);
+	const status = document.getElementById('dominic-status')!;
+	const lookupInput = document.getElementById('dominic-lookup') as HTMLInputElement;
+	const result = document.getElementById('dominic-result')!;
+	const highlighted: HTMLElement[] = [];
+
+	let letters = defaultLetters;
+
+	function imageFor(number: string) {
+		const row = rows.get(number)!;
+		return { el: row.el, person: row.person.value.trim(), action: row.action.value.trim() };
+	}
+
+	function exampleResult() {
+		const first = imageFor('31');
+		const second = imageFor('19');
+		if (!first.person || !second.action) return 'Type a 2- or 3-digit code';
+		return `319 → 31-19 → ${first.person} ${second.action}`;
+	}
+
+	function refreshLetterHints() {
+		letterInputs.forEach((input, digit) => (input.value = letters[digit]));
+		for (const [number, row] of rows)
+			row.letters.textContent = number
+				.split('')
+				.map((digit) => letters[Number(digit)])
+				.join('');
+	}
+
+	function save() {
+		const entries: Record<string, { person: string; action: string }> = {};
+		for (const [number, row] of rows)
+			entries[number] = { person: row.person.value.trim(), action: row.action.value.trim() };
+		localStorage.setItem(STORAGE_KEY, JSON.stringify({ letters, entries }));
+	}
+
+	function load() {
+		const raw = localStorage.getItem(STORAGE_KEY);
+		if (!raw) return;
+		try {
+			const saved = JSON.parse(raw);
+			if (typeof saved.letters === 'string' && /^[A-Z]{10}$/.test(saved.letters))
+				letters = saved.letters;
+			for (const [number, row] of rows) {
+				const entry = saved.entries?.[number];
+				row.person.value = entry?.person ?? '';
+				row.action.value = entry?.action ?? '';
+			}
+		} catch {
+			// Corrupted saved state: fall back to the server-rendered defaults
+		}
+	}
+
+	let statusTimer: number | undefined;
+	function showStatus(message: string, isError = false) {
+		status.textContent = message;
+		status.classList.toggle('error', isError);
+		clearTimeout(statusTimer);
+		if (!isError) statusTimer = window.setTimeout(() => (status.textContent = ''), 4000);
+	}
+
+	function serialize() {
+		const lines = [letters];
+		for (const [number, row] of rows) {
+			const person = row.person.value.trim();
+			const action = row.action.value.trim();
+			if (person || action) lines.push(`${number} - ${person} / ${action}`);
+		}
+		return lines.join('\n') + '\n';
+	}
+
+	// Lines are "NN - person / action"; a bare 10-letter first line sets the
+	// digit→letter mapping. Person may contain '-' (the number always leads),
+	// but the first '/' always ends the person.
+	function parse(text: string) {
+		let parsedLetters: string | null = null;
+		const entries = new Map<string, { person: string; action: string }>();
+		let first = true;
+		const lines = text.split(/\r?\n/);
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i].trim();
+			if (!line) continue;
+			if (first && /^[A-Za-z]{10}$/.test(line)) {
+				parsedLetters = line.toUpperCase();
+				first = false;
+				continue;
+			}
+			first = false;
+			const match = line.match(/^(\d{2})\s*-\s*(.*)$/);
+			if (!match)
+				throw new Error(
+					`Line ${i + 1} should look like "31 - Captain America / throwing a shield"`
+				);
+			const slash = match[2].indexOf('/');
+			if (slash === -1) throw new Error(`Line ${i + 1} is missing the "/" between person and action`);
+			entries.set(match[1], {
+				person: match[2].slice(0, slash).trim(),
+				action: match[2].slice(slash + 1).trim(),
+			});
+		}
+		return { letters: parsedLetters, entries };
+	}
+
+	// All-or-nothing: a malformed line rejects the whole import
+	function applyImport(text: string) {
+		let parsed: ReturnType<typeof parse>;
+		try {
+			parsed = parse(text);
+		} catch (error) {
+			showStatus((error as Error).message, true);
+			return false;
+		}
+		if (!parsed.letters && parsed.entries.size === 0) {
+			showStatus('Nothing to import.', true);
+			return false;
+		}
+		if (parsed.letters) letters = parsed.letters;
+		for (const [number, row] of rows) {
+			const entry = parsed.entries.get(number);
+			row.person.value = entry?.person ?? '';
+			row.action.value = entry?.action ?? '';
+		}
+		refreshLetterHints();
+		save();
+		runLookup();
+		showStatus(`Imported ${parsed.entries.size} entries.`);
+		return true;
+	}
+
+	function runLookup() {
+		const digits = lookupInput.value.replace(/\D/g, '').slice(0, 3);
+		lookupInput.value = digits;
+
+		for (const el of highlighted.splice(0)) el.classList.remove('highlight');
+		result.classList.toggle('hint', digits.length === 0);
+		if (digits.length === 0) {
+			result.textContent = exampleResult();
+		} else if (digits.length === 1) {
+			result.textContent = '';
+		} else if (digits.length === 2) {
+			const { el, person, action } = imageFor(digits);
+			result.textContent = `${digits} → ${person} ${action}`;
+			el.classList.add('highlight');
+			highlighted.push(el);
+		} else {
+			// Area codes: duplicate the middle digit, then person of the first
+			// pair + action of the second
+			const first = imageFor(digits.slice(0, 2));
+			const second = imageFor(digits.slice(1, 3));
+			result.textContent = `${digits} → ${digits.slice(0, 2)}-${digits.slice(1, 3)} → ${first.person} ${second.action}`;
+			first.el.classList.add('highlight');
+			highlighted.push(first.el);
+			if (second.el !== first.el) {
+				second.el.classList.add('highlight');
+				highlighted.push(second.el);
+			}
+		}
+	}
+
+	load();
+	refreshLetterHints();
+	runLookup();
+
+	lookupInput.addEventListener('input', runLookup);
+	document.getElementById('dominic-entries')!.addEventListener('input', () => {
+		save();
+		runLookup();
+	});
+
+	letterInputs.forEach((input, digit) => {
+		input.addEventListener('focus', () => input.select());
+		input.addEventListener('input', () => {
+			const char = input.value.match(/[a-zA-Z]/)?.[0]?.toUpperCase();
+			if (char) {
+				letters = letters.slice(0, digit) + char + letters.slice(digit + 1);
+				refreshLetterHints();
+				save();
+				runLookup();
+			} else if (input.value) {
+				input.value = letters[digit];
+			}
+			// Emptied via backspace: leave it until blur so the user can retype
+		});
+		input.addEventListener('blur', () => (input.value = letters[digit]));
+	});
+
+	const fileInput = document.getElementById('dominic-file') as HTMLInputElement;
+	document.getElementById('dominic-import')!.addEventListener('click', () => fileInput.click());
+	fileInput.addEventListener('change', async () => {
+		const file = fileInput.files?.[0];
+		if (file) applyImport(await file.text());
+		fileInput.value = '';
+	});
+
+	document.getElementById('dominic-export')!.addEventListener('click', () => {
+		const url = URL.createObjectURL(new Blob([serialize()], { type: 'text/plain' }));
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = 'mnemonics.dominic';
+		link.click();
+		URL.revokeObjectURL(url);
+	});
+
+	document.getElementById('dominic-copy')!.addEventListener('click', async () => {
+		try {
+			await navigator.clipboard.writeText(serialize());
+			showStatus('Copied to clipboard.');
+		} catch {
+			showStatus('Could not access the clipboard.', true);
+		}
+	});
+
+	const pasteFallback = document.getElementById('dominic-paste-fallback')!;
+	const pasteText = document.getElementById('dominic-paste-text') as HTMLTextAreaElement;
+	document.getElementById('dominic-paste')!.addEventListener('click', async () => {
+		// Firefox (and denied permissions) can't read the clipboard directly;
+		// fall back to a paste box
+		try {
+			applyImport(await navigator.clipboard.readText());
+		} catch {
+			pasteFallback.hidden = false;
+			pasteText.focus();
+			showStatus('Paste your list into the box below.');
+		}
+	});
+	document.getElementById('dominic-paste-confirm')!.addEventListener('click', () => {
+		if (applyImport(pasteText.value)) {
+			pasteFallback.hidden = true;
+			pasteText.value = '';
+		}
+	});
+
+	document.getElementById('dominic-reset')!.addEventListener('click', () => {
+		if (!confirm("Replace your list with Dan's defaults? This overwrites your edits.")) return;
+		letters = defaultLetters;
+		for (const [number, row] of rows) {
+			const entry = defaults.get(number)!;
+			row.person.value = entry.person;
+			row.action.value = entry.action;
+		}
+		refreshLetterHints();
+		localStorage.removeItem(STORAGE_KEY);
+		runLookup();
+		showStatus("Reset to Dan's list.");
+	});
+
+	document.getElementById('dominic-clear')!.addEventListener('click', () => {
+		if (!confirm('Clear every person and action? The letter mapping is kept.')) return;
+		for (const row of rows.values()) {
+			row.person.value = '';
+			row.action.value = '';
+		}
+		save();
+		runLookup();
+		showStatus('Cleared all entries.');
+	});
+</script>
+
+<style>
+	.controls {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 1.5rem 0 0;
+	}
+	.controls .spacer {
+		flex: 1;
+	}
+	.controls button,
+	.paste-fallback button {
+		font: inherit;
+		font-size: 0.9rem;
+		color: inherit;
+		background: none;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		padding: 0.2em 0.7em;
+		cursor: pointer;
+	}
+	.controls button:hover,
+	.paste-fallback button:hover {
+		background: var(--sky-tint);
+		border-color: var(--sky-line);
+	}
+	.status {
+		min-height: 1.55em;
+		margin: 0.4rem 0;
+		color: var(--ink-soft);
+		font-size: 0.9rem;
+	}
+	.status.error {
+		color: #b91c1c;
+	}
+	.paste-fallback {
+		margin: 0 0 1rem;
+	}
+	.paste-fallback textarea {
+		display: block;
+		width: 100%;
+		margin-bottom: 0.5rem;
+		padding: 0.5em 0.7em;
+		font-family: ui-monospace, monospace;
+		font-size: 0.85rem;
+		color: inherit;
+		background: none;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		resize: vertical;
+	}
+	.paste-fallback textarea:focus {
+		outline: none;
+		border-color: var(--sky-line);
+	}
+	.mapping {
+		display: flex;
+		flex-wrap: wrap;
+		width: fit-content;
+		margin: 0 auto;
+		padding: 0;
+		list-style: none;
+		border: 1px solid var(--line);
+		border-bottom: none;
+		border-radius: 6px 6px 0 0;
+		font-size: 0.8rem;
+		font-family: ui-monospace, monospace;
+		text-align: center;
+	}
+	.mapping li {
+		padding: 0 0.45em;
+	}
+	.mapping li span {
+		display: block;
+		color: var(--ink-soft);
+	}
+	.mapping li input {
+		display: block;
+		width: 1.6em;
+		padding: 0;
+		text-align: center;
+		font: inherit;
+		color: inherit;
+		background: none;
+		border: none;
+		border-radius: 3px;
+	}
+	.mapping li input:focus {
+		outline: none;
+		background: var(--sky-tint);
+	}
+	.mapping li + li {
+		border-left: 1px solid var(--line);
+	}
+	.box {
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		padding: 1rem 1.2rem;
+	}
+	hr {
+		border: none;
+		border-top: 1px solid var(--line);
+		margin: 1rem -1.2rem;
+	}
+	.try {
+		margin: 0 0 0.3rem;
+		text-align: center;
+	}
+	.try input {
+		width: 5em;
+		padding: 0.2em 0.5em;
+		text-align: center;
+		font: inherit;
+		font-variant-numeric: tabular-nums;
+		color: inherit;
+		background: none;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+	}
+	.try input:focus {
+		outline: none;
+		border-color: var(--sky-line);
+	}
+	.result {
+		min-height: 1.55em;
+		margin: 0 0 1.2rem;
+		text-align: center;
+	}
+	.result.hint {
+		color: var(--ink-soft);
+	}
+	.entries {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	/* Person on the first line, action indented on the line below it */
+	.entries li {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		align-items: center;
+		column-gap: 0.35em;
+		padding: 0.1em 0.4em;
+		border-radius: 4px;
+	}
+	.entries li.highlight {
+		background: var(--sky-tint);
+		box-shadow: 0 0 0 1px var(--sky-line);
+	}
+	.entries .code {
+		grid-row: 1;
+		grid-column: 1;
+		color: var(--ink-soft);
+		font-size: 0.85em;
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+	.entries input {
+		min-width: 0;
+		padding: 0.1em 0.3em;
+		font: inherit;
+		color: inherit;
+		background: none;
+		border: 1px solid transparent;
+		border-radius: 4px;
+	}
+	.entries input.person {
+		grid-row: 1;
+		grid-column: 2;
+	}
+	.entries input.action {
+		grid-row: 2;
+		grid-column: 2;
+		margin-left: 0.6em;
+	}
+	.entries input:hover {
+		border-color: var(--line);
+	}
+	.entries input:focus {
+		outline: none;
+		border-color: var(--sky-line);
+	}
+</style>

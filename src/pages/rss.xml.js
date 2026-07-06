@@ -8,8 +8,7 @@ export async function GET(context) {
 	);
 	return rss({
 		title: 'Dan Dangond · Blog',
-		// TODO(dan): replace with a one-sentence feed description in your voice.
-		description: 'Posts from guata.me',
+		description: 'Posts from Dan Dangond',
 		site: context.site,
 		items: posts.map((post) => ({
 			title: post.data.title,

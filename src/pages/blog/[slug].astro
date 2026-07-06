@@ -11,10 +11,15 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+
+// GeoGuessr posts are reached from /geoguessr, so send readers back there
+const back = post.data.tags?.includes('geoguessr')
+	? { href: '/geoguessr', label: 'GeoGuessr' }
+	: { href: '/blog', label: 'Blog' };
 ---
 
 <Layout title={post.data.title} active="blog" description={post.data.description}>
-	<a class="back" href="/blog">← Blog</a>
+	<a class="back" href={back.href}>← {back.label}</a>
 	<h1>{post.data.title}</h1>
 	{
 		post.data.draft ? (

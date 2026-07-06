@@ -1,0 +1,204 @@
+---
+import { digitLetters, mnemonics } from '../data/mnemonics';
+
+// '319' → 'CAN': each digit's letter under the Dominic System mapping
+const lettersFor = (number: string) =>
+	number
+		.split('')
+		.map((digit) => digitLetters[Number(digit)])
+		.join('');
+
+// Example result shown greyed-out until the reader types a code of their own
+const byNumber = new Map(mnemonics.map((m) => [m.number, m]));
+const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumber.get('19')!.action}`;
+---
+
+<div class="mnemonics">
+	<ul class="mapping" aria-label="Digit to letter mapping">
+		{
+			digitLetters.split('').map((letter, digit) => (
+				<li>
+					<span>{digit}</span>
+					<span>{letter}</span>
+				</li>
+			))
+		}
+	</ul>
+
+	<div class="box">
+		<p class="try">
+			<input
+				id="mnemonic-lookup"
+				inputmode="numeric"
+				maxlength="3"
+				placeholder="319"
+				autocomplete="off"
+				aria-label="Type a 2- or 3-digit code"
+			/>
+		</p>
+		<p id="mnemonic-result" class="result hint" aria-live="polite">{exampleResult}</p>
+		<hr />
+
+		<ul id="mnemonic-entries" class="entries">
+			{
+				mnemonics.map((m) => (
+					<li data-number={m.number}>
+						<span class="code">
+							{m.number} • {lettersFor(m.number)}
+						</span>
+						<span class="image">
+							<span class="person">{m.person}</span>
+							<span class="action">{m.action}</span>
+						</span>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</div>
+
+<script>
+	const input = document.getElementById('mnemonic-lookup') as HTMLInputElement;
+	const result = document.getElementById('mnemonic-result')!;
+	const exampleResult = result.textContent;
+	const entries = new Map<string, { el: HTMLElement; person: string; action: string }>();
+	document.querySelectorAll<HTMLElement>('#mnemonic-entries [data-number]').forEach((el) => {
+		entries.set(el.dataset.number!, {
+			el,
+			person: el.querySelector('.person')!.textContent!,
+			action: el.querySelector('.action')!.textContent!,
+		});
+	});
+
+	const highlighted: HTMLElement[] = [];
+	const highlight = (number: string) => {
+		const entry = entries.get(number)!;
+		entry.el.classList.add('highlight');
+		highlighted.push(entry.el);
+	};
+
+	input.addEventListener('input', () => {
+		const digits = input.value.replace(/\D/g, '').slice(0, 3);
+		input.value = digits;
+
+		for (const el of highlighted.splice(0)) el.classList.remove('highlight');
+		result.classList.toggle('hint', digits.length === 0);
+		if (digits.length === 0) {
+			result.textContent = exampleResult;
+		} else if (digits.length === 1) {
+			result.textContent = '';
+		} else if (digits.length === 2) {
+			const { person, action } = entries.get(digits)!;
+			result.textContent = `${digits} → ${person} ${action}`;
+			highlight(digits);
+		} else {
+			// Area codes: duplicate the middle digit, then person of the first
+			// pair + action of the second
+			const first = digits.slice(0, 2);
+			const second = digits.slice(1, 3);
+			result.textContent = `${digits} → ${first}-${second} → ${entries.get(first)!.person} ${entries.get(second)!.action}`;
+			highlight(first);
+			if (second !== first) highlight(second);
+		}
+	});
+</script>
+
+<style>
+	.mapping {
+		display: flex;
+		flex-wrap: wrap;
+		width: fit-content;
+		margin: 0 auto;
+		padding: 0;
+		list-style: none;
+		border: 1px solid var(--line);
+		border-bottom: none;
+		border-radius: 6px 6px 0 0;
+		font-size: 0.8rem;
+		font-family: ui-monospace, monospace;
+		text-align: center;
+	}
+	.mapping li {
+		padding: 0 0.45em;
+	}
+	.mapping li span {
+		display: block;
+	}
+	.mapping li + li {
+		border-left: 1px solid var(--line);
+	}
+	.box {
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		padding: 1rem 1.2rem;
+	}
+	hr {
+		border: none;
+		border-top: 1px solid var(--line);
+		margin: 1rem -1.2rem;
+	}
+	.try {
+		margin: 0 0 0.3rem;
+		text-align: center;
+	}
+	.try input {
+		width: 5em;
+		padding: 0.2em 0.5em;
+		text-align: center;
+		font: inherit;
+		font-variant-numeric: tabular-nums;
+		color: inherit;
+		background: none;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+	}
+	.try input:focus {
+		outline: none;
+		border-color: var(--sky-line);
+	}
+	.result {
+		min-height: 1.55em;
+		margin: 0 0 1.2rem;
+		text-align: center;
+	}
+	.result.hint {
+		color: var(--ink-soft);
+	}
+	.entries {
+		columns: 2;
+		column-gap: 2.5rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.entries li {
+		display: flex;
+		align-items: baseline;
+		gap: 0.45em;
+		break-inside: avoid;
+		padding: 0.1em 0.4em;
+		border-radius: 4px;
+	}
+	.entries li.highlight {
+		background: var(--sky-tint);
+		box-shadow: 0 0 0 1px var(--sky-line);
+	}
+	.entries .code {
+		flex-shrink: 0;
+		color: var(--ink-soft);
+		font-size: 0.85em;
+		font-variant-numeric: tabular-nums;
+	}
+	.entries .person,
+	.entries .action {
+		display: block;
+	}
+	.entries .action {
+		padding-left: 0.6em;
+	}
+	@media (max-width: 640px) {
+		.entries {
+			columns: 1;
+		}
+	}
+</style>

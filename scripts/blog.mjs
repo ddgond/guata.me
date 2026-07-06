@@ -46,9 +46,9 @@ async function ask(prompt) {
 const listDrafts = () =>
 	existsSync(CONTENT_DIR)
 		? readdirSync(CONTENT_DIR)
-				.filter((f) => f.endsWith('.md'))
+				.filter((f) => f.endsWith('.mdx'))
 				.filter((f) => /^draft:\s*true\b/m.test(readFileSync(join(CONTENT_DIR, f), 'utf8')))
-				.map((f) => f.replace(/\.md$/, ''))
+				.map((f) => f.replace(/\.mdx$/, ''))
 		: [];
 
 // Numbered picker over the current drafts; answer with a number or a slug.
@@ -64,7 +64,7 @@ async function pickDraft(verb) {
 }
 
 const postFile = (slug) => {
-	const file = join(CONTENT_DIR, `${slug}.md`);
+	const file = join(CONTENT_DIR, `${slug}.mdx`);
 	if (!existsSync(file)) fail(`${file} not found.`);
 	return file;
 };
@@ -92,7 +92,7 @@ async function cmdNew(title, tags) {
 		.filter(Boolean);
 
 	mkdirSync(CONTENT_DIR, { recursive: true });
-	const file = join(CONTENT_DIR, `${slug}.md`);
+	const file = join(CONTENT_DIR, `${slug}.mdx`);
 	if (existsSync(file)) fail(`${file} already exists.`);
 
 	const stub = `---
@@ -103,8 +103,8 @@ draft: true # drafts render in dev but are excluded from production builds
 # pubDate is stamped by \`npm run blog -- publish ${slug}\`
 ---
 
-Write the post here — it's markdown, so paragraphs, links, and formatting all
-work. Delete these instructions when done.
+Write the post here — it's MDX, so markdown formatting works and Astro
+components can be imported. Delete these instructions when done.
 `;
 	writeFileSync(file, stub);
 	console.log(`Created ${file} (draft — publish with \`npm run blog -- publish ${slug}\`)`);

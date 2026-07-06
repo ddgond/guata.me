@@ -12,6 +12,7 @@
     "blog": "node scripts/blog.mjs"
   },
   "dependencies": {
+    "@astrojs/mdx": "^4.3.14",
     "@astrojs/rss": "^4.0.19",
     "@fontsource-variable/inter": "^5.2.8",
     "astro": "^5.18.2"
