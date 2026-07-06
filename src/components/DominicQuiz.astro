@@ -1,0 +1,274 @@
+---
+// Self-graded flashcard quiz over the user's saved Dominic System list. Reads
+// the same localStorage the builder page writes, falling back to the default
+// list when nothing has been saved. Only entries with both a person and an
+// action are quizzed; missed cards recycle to the end of the deck until
+// answered right. Session-only — nothing persists across reloads.
+interface Props {
+	// Elements matching this selector are hidden while a quiz session runs, so
+	// the page can tuck away anything that would show the answers.
+	hide?: string;
+}
+const { hide } = Astro.props;
+---
+
+<div class="dominic-quiz" data-hide={hide}>
+	<div class="bar idle">
+		<button class="start" type="button">Start Quiz</button>
+		<span class="empty-note" hidden>
+			[PLACEHOLDER: shown when no entry has both a person and an action — tell the user to fill
+			some in before quizzing]
+		</span>
+	</div>
+	<div class="session" hidden>
+		<div class="bar">
+			<span class="count" aria-live="polite"></span>
+			<span class="spacer"></span>
+			<button class="exit" type="button">Exit Quiz</button>
+		</div>
+		<div class="card face">
+			<p class="number"></p>
+			<p class="answer" aria-live="polite"></p>
+			<div class="actions">
+				<button class="reveal" type="button">Reveal</button>
+				<button class="grade-right" type="button" hidden>Right</button>
+				<button class="grade-wrong" type="button" hidden>Wrong</button>
+			</div>
+		</div>
+		<div class="card done" hidden>
+			<p class="summary">
+				You got <span class="first-try"></span> of <span class="total"></span> on the first try.
+			</p>
+			<div class="actions">
+				<button class="restart" type="button">Start Quiz</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { dominicStorageKey, mnemonics as defaultMnemonics } from '../data/mnemonics';
+
+	const root = document.querySelector<HTMLElement>('.dominic-quiz')!;
+	const el = <T extends HTMLElement = HTMLElement>(selector: string) =>
+		root.querySelector<T>(selector)!;
+
+	const idleBar = el('.idle');
+	const emptyNote = el('.empty-note');
+	const session = el('.session');
+	const face = el('.face');
+	const done = el('.done');
+	const countEl = el('.count');
+	const numberEl = el('.number');
+	const answerEl = el('.answer');
+	const revealButton = el<HTMLButtonElement>('.reveal');
+	const rightButton = el<HTMLButtonElement>('.grade-right');
+	const wrongButton = el<HTMLButtonElement>('.grade-wrong');
+
+	const hiddenWhileActive = (): HTMLElement[] =>
+		root.dataset.hide ? Array.from(document.querySelectorAll<HTMLElement>(root.dataset.hide)) : [];
+
+	interface Image {
+		person: string;
+		action: string;
+	}
+
+	let active = false;
+	let images = new Map<string, Image>();
+	let queue: string[] = [];
+	let current: string | null = null;
+	let revealed = false;
+	let total = 0;
+	let mastered = 0;
+	let firstTry = 0;
+	let graded = new Set<string>();
+
+	// Mirrors the builder's load(): saved state wins when present, and corrupted
+	// or missing state falls back to the default list it renders.
+	function loadDeck() {
+		let entries: { number: string; person: string; action: string }[] = defaultMnemonics;
+		const raw = localStorage.getItem(dominicStorageKey);
+		if (raw) {
+			try {
+				const saved = JSON.parse(raw);
+				entries = Object.entries(saved.entries ?? {}).map(([number, entry]) => ({
+					number,
+					person: String((entry as Image)?.person ?? '').trim(),
+					action: String((entry as Image)?.action ?? '').trim(),
+				}));
+			} catch {
+				// Corrupted saved state: quiz the defaults, like the builder shows them
+			}
+		}
+		return entries.filter((entry) => entry.person && entry.action);
+	}
+
+	function shuffle<T>(items: T[]) {
+		for (let i = items.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[items[i], items[j]] = [items[j], items[i]];
+		}
+		return items;
+	}
+
+	function updateCount() {
+		countEl.textContent = `${mastered} / ${total}`;
+	}
+
+	function nextCard() {
+		current = queue.shift() ?? null;
+		updateCount();
+		if (current === null) {
+			face.hidden = true;
+			done.hidden = false;
+			el('.first-try').textContent = String(firstTry);
+			el('.total').textContent = String(total);
+			return;
+		}
+		revealed = false;
+		numberEl.textContent = current;
+		answerEl.textContent = '';
+		revealButton.hidden = false;
+		rightButton.hidden = true;
+		wrongButton.hidden = true;
+	}
+
+	function reveal() {
+		if (current === null || revealed) return;
+		revealed = true;
+		const image = images.get(current)!;
+		answerEl.textContent = `${image.person} ${image.action}`;
+		revealButton.hidden = true;
+		rightButton.hidden = false;
+		wrongButton.hidden = false;
+	}
+
+	function grade(right: boolean) {
+		if (current === null || !revealed) return;
+		if (!graded.has(current)) {
+			graded.add(current);
+			if (right) firstTry++;
+		}
+		if (right) mastered++;
+		else queue.push(current);
+		nextCard();
+	}
+
+	function start() {
+		const deck = loadDeck();
+		if (deck.length === 0) {
+			emptyNote.hidden = false;
+			return;
+		}
+		emptyNote.hidden = true;
+		images = new Map(deck.map((entry) => [entry.number, entry]));
+		queue = shuffle(deck.map((entry) => entry.number));
+		total = deck.length;
+		mastered = 0;
+		firstTry = 0;
+		graded = new Set();
+		active = true;
+		idleBar.hidden = true;
+		session.hidden = false;
+		done.hidden = true;
+		face.hidden = false;
+		for (const target of hiddenWhileActive()) target.hidden = true;
+		nextCard();
+	}
+
+	function exit() {
+		active = false;
+		current = null;
+		session.hidden = true;
+		idleBar.hidden = false;
+		for (const target of hiddenWhileActive()) target.hidden = false;
+	}
+
+	el('.start').addEventListener('click', start);
+	el('.restart').addEventListener('click', start);
+	el('.exit').addEventListener('click', exit);
+	revealButton.addEventListener('click', reveal);
+	rightButton.addEventListener('click', () => grade(true));
+	wrongButton.addEventListener('click', () => grade(false));
+
+	// Space/Enter reveals, then 1 = right, 2 = wrong. Focused buttons and form
+	// fields keep their native key handling.
+	document.addEventListener('keydown', (event) => {
+		if (!active || current === null) return;
+		if (event.ctrlKey || event.metaKey || event.altKey) return;
+		const target = event.target as HTMLElement;
+		if (
+			target instanceof HTMLInputElement ||
+			target instanceof HTMLTextAreaElement ||
+			(target instanceof HTMLButtonElement && (event.key === ' ' || event.key === 'Enter'))
+		)
+			return;
+		if (!revealed && (event.key === ' ' || event.key === 'Enter')) {
+			event.preventDefault();
+			reveal();
+		} else if (revealed && event.key === '1') {
+			grade(true);
+		} else if (revealed && event.key === '2') {
+			grade(false);
+		}
+	});
+</script>
+
+<style>
+	/* The flex display on .bar would otherwise beat the hidden attribute */
+	[hidden] {
+		display: none !important;
+	}
+	.bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 1.5rem 0 0;
+	}
+	.spacer {
+		flex: 1;
+	}
+	button {
+		font: inherit;
+		font-size: 0.9rem;
+		color: inherit;
+		background: none;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		padding: 0.2em 0.7em;
+		cursor: pointer;
+	}
+	button:hover {
+		background: var(--sky-tint);
+		border-color: var(--sky-line);
+	}
+	.empty-note {
+		color: var(--ink-soft);
+		font-size: 0.9rem;
+	}
+	.card {
+		margin-top: 1rem;
+		padding: 1.5rem 1.2rem;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		text-align: center;
+	}
+	.number {
+		margin: 0;
+		font-size: 2.5rem;
+		font-variant-numeric: tabular-nums;
+	}
+	.answer {
+		min-height: 1.55em;
+		margin: 0.3rem 0 1.2rem;
+	}
+	.summary {
+		margin: 0 0 1.2rem;
+	}
+	.actions {
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+</style>

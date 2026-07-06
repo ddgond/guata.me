@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import DominicQuiz from '../../components/DominicQuiz.astro';
 import { digitLetters, mnemonics } from '../../data/mnemonics';
 
 // '319' → 'CAN': each digit's letter under the Dominic System mapping
@@ -27,72 +28,78 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 		return.
 	</p>
 
-	<div class="controls">
-		<button id="dominic-import" type="button">Import file</button>
-		<button id="dominic-export" type="button">Export file</button>
-		<button id="dominic-copy" type="button">Copy</button>
-		<button id="dominic-paste" type="button">Paste</button>
-		<span class="spacer"></span>
-		<button id="dominic-reset" type="button">Reset to Dan's list</button>
-		<button id="dominic-clear" type="button">Clear all</button>
-		<input id="dominic-file" type="file" accept=".dominic,text/plain" hidden />
-	</div>
-	<p id="dominic-status" class="status" aria-live="polite"></p>
-	<div id="dominic-paste-fallback" class="paste-fallback" hidden>
-		<textarea
-			id="dominic-paste-text"
-			rows="6"
-			placeholder={'OABCDESGHN\n00 - Ozzy Osborne / shredding on a guitar\n...'}></textarea>
-		<button id="dominic-paste-confirm" type="button">Import pasted text</button>
-	</div>
+	<DominicQuiz hide="#dominic-editor" />
 
-	<div class="mnemonics">
-		<ul id="dominic-mapping" class="mapping" aria-label="Digit to letter mapping">
-			{
-				digitLetters.split('').map((letter, digit) => (
-					<li>
-						<span>{digit}</span>
-						<input value={letter} maxlength="1" aria-label={`Letter for digit ${digit}`} />
-					</li>
-				))
-			}
-		</ul>
+	<div id="dominic-editor">
+		<div class="controls">
+			<button id="dominic-import" type="button">Import file</button>
+			<button id="dominic-export" type="button">Export file</button>
+			<button id="dominic-copy" type="button">Copy</button>
+			<button id="dominic-paste" type="button">Paste</button>
+			<span class="spacer"></span>
+			<button id="dominic-reset" type="button">Reset to Dan's list</button>
+			<button id="dominic-clear" type="button">Clear all</button>
+			<input id="dominic-file" type="file" accept=".dominic,text/plain" hidden />
+		</div>
+		<p id="dominic-status" class="status" aria-live="polite"></p>
+		<div id="dominic-paste-fallback" class="paste-fallback" hidden>
+			<textarea
+				id="dominic-paste-text"
+				rows="6"
+				placeholder={'OABCDESGHN\n00 - Ozzy Osborne / shredding on a guitar\n...'}></textarea>
+			<button id="dominic-paste-confirm" type="button">Import pasted text</button>
+		</div>
 
-		<div class="box">
-			<p class="try">
-				<input
-					id="dominic-lookup"
-					inputmode="numeric"
-					maxlength="3"
-					placeholder="319"
-					autocomplete="off"
-					aria-label="Type a 2- or 3-digit code"
-				/>
-			</p>
-			<p id="dominic-result" class="result hint" aria-live="polite">{exampleResult}</p>
-			<hr />
-
-			<ul id="dominic-entries" class="entries">
+		<div class="mnemonics">
+			<ul id="dominic-mapping" class="mapping" aria-label="Digit to letter mapping">
 				{
-					mnemonics.map((m) => (
-						<li data-number={m.number}>
-							<span class="code">
-								{m.number} • <span class="letters">{lettersFor(m.number)}</span>
-							</span>
-							<input class="person" value={m.person} aria-label={`Person for ${m.number}`} />
-							<input class="action" value={m.action} aria-label={`Action for ${m.number}`} />
+					digitLetters.split('').map((letter, digit) => (
+						<li>
+							<span>{digit}</span>
+							<input value={letter} maxlength="1" aria-label={`Letter for digit ${digit}`} />
 						</li>
 					))
 				}
 			</ul>
+
+			<div class="box">
+				<p class="try">
+					<input
+						id="dominic-lookup"
+						inputmode="numeric"
+						maxlength="3"
+						placeholder="319"
+						autocomplete="off"
+						aria-label="Type a 2- or 3-digit code"
+					/>
+				</p>
+				<p id="dominic-result" class="result hint" aria-live="polite">{exampleResult}</p>
+				<hr />
+
+				<ul id="dominic-entries" class="entries">
+					{
+						mnemonics.map((m) => (
+							<li data-number={m.number}>
+								<span class="code">
+									{m.number} • <span class="letters">{lettersFor(m.number)}</span>
+								</span>
+								<input class="person" value={m.person} aria-label={`Person for ${m.number}`} />
+								<input class="action" value={m.action} aria-label={`Action for ${m.number}`} />
+							</li>
+						))
+					}
+				</ul>
+			</div>
 		</div>
 	</div>
 </Layout>
 
 <script>
-	import { digitLetters as defaultLetters, mnemonics as defaultMnemonics } from '../../data/mnemonics';
-
-	const STORAGE_KEY = 'dominic-system';
+	import {
+		digitLetters as defaultLetters,
+		dominicStorageKey as STORAGE_KEY,
+		mnemonics as defaultMnemonics,
+	} from '../../data/mnemonics';
 	const defaults = new Map(defaultMnemonics.map((m) => [m.number, m]));
 
 	interface Row {

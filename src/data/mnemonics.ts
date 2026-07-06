@@ -5,6 +5,10 @@
 // Digit → letter mapping: the digit is the index, so 0→O, 1→A, … 9→N.
 export const digitLetters = 'OABCDESGHN';
 
+// localStorage key where the builder page persists the user's edited list;
+// shared with the quiz component so both always read/write the same state.
+export const dominicStorageKey = 'dominic-system';
+
 export interface Mnemonic {
 	// '00'–'99' as a two-char string so leading zeros survive
 	number: string;
