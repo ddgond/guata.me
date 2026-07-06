@@ -409,6 +409,10 @@ const { scope, initial } = Astro.props;
 		aspect-ratio: 4 / 5;
 		background: #a2daf2;
 	}
+	/* Shorten Leaflet's 0.25s zoom transition — panning is locked while it runs */
+	kabupaten-quiz :global(.leaflet-zoom-anim .leaflet-zoom-animated) {
+		transition-duration: 0.05s;
+	}
 	.name-tip {
 		position: absolute;
 		z-index: 700; /* above Leaflet's overlay panes */
