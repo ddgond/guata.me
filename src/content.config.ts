@@ -39,12 +39,12 @@ const posts = defineCollection({
 			// Posts tagged `geoguessr` appear on /geoguessr
 			tags: z.array(z.string()).default([]),
 			// Drafts render in dev but are excluded from production builds.
-			// `npm run publish-post` flips this and stamps pubDate.
+			// `npm run blog -- publish` flips this and stamps pubDate.
 			draft: z.boolean().default(false),
 			pubDate: z.coerce.date().optional(),
 		})
 		.refine((post) => post.draft || post.pubDate, {
-			message: 'Published posts need a pubDate — publish drafts with `npm run publish-post`.',
+			message: 'Published posts need a pubDate — publish drafts with `npm run blog -- publish`.',
 		}),
 });
 

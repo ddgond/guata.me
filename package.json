@@ -9,9 +9,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "new-project": "node scripts/new-project.mjs",
-    "new-post": "node scripts/new-post.mjs",
-    "edit-post": "node scripts/edit-post.mjs",
-    "publish-post": "node scripts/publish-post.mjs"
+    "blog": "node scripts/blog.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",

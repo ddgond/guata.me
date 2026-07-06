@@ -3,7 +3,7 @@ title: Memorizing Kabupaten
 # description: One-line blurb shown in post listings and the RSS feed — uncomment and write it.
 tags: [geoguessr] # posts tagged geoguessr appear on /geoguessr
 draft: true # drafts render in dev but are excluded from production builds
-# pubDate is stamped by `npm run publish-post -- memorizing-kabupaten`
+# pubDate is stamped by `npm run blog -- publish memorizing-kabupaten`
 ---
 
 Write the post here — planned topic from todo.md: how you memorize Indonesian
