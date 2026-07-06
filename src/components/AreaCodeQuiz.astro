@@ -1,0 +1,24 @@
+---
+// Interactive find-on-map quiz over a country's phone area codes, using the
+// same boundaries as helloquiz.app's area-code quizzes. Thin wrapper over
+// MapQuizShell — the behavior lives in map-quiz.ts with the area-code
+// definitions from map-quiz-defs.ts, and the geometry in
+// /data/area-codes-{jp,br,us}.json (regenerate with
+// scripts/area-code-data.mjs).
+//
+// Overlay codes ("203/475" on one shape) are quizzed one code at a time, and
+// clicking any shape that carries the asked code counts. Japan and Brazil
+// quiz the whole country; the US gets a picker of multi-state regions plus
+// an All United States entry.
+
+import MapQuizShell from './MapQuizShell.astro';
+
+interface Props {
+	country: 'japan' | 'brazil' | 'usa';
+}
+
+const { country } = Astro.props;
+const quiz = { japan: 'area-jp', brazil: 'area-br', usa: 'area-us' }[country];
+---
+
+<MapQuizShell quiz={quiz} pickerLabel={country === 'usa' ? 'Choose a region' : undefined} />

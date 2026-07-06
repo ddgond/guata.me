@@ -7,6 +7,7 @@ pubDate: 2026-07-06
 ---
 
 import MnemonicList from '../../components/MnemonicList.astro';
+import AreaCodeQuiz from '../../components/AreaCodeQuiz.astro';
 
 > **TL;DR:** Memorizing area codes sounds miserable, but it's actually easy with the Dominic System: map every number from 00-99 to a person performing an action (78 = Genghis Khan riding horses), then tie that image to the corresponding region (Genghis Khan herding Kobe beef like a cowboy). Quizzing is much more effective after this, and the mnemonics tend to stick after just one or two viewings of the area code.
 
@@ -36,17 +37,29 @@ To use the Dominic System here, don't worry about the paired two-digit technique
 
 Japan only has 59 area codes, so what I recommend is to go to [this quiz](https://helloquiz.app/quiz/HYn74vk076sz), enable "Force Correct Click" and "Recycle Missed Answers", and run through the whole thing until you get every code correct on the first try. For each code, think carefully about the corresponding image and how it corresponds to that area. Once you've got a solid handle on these, turn off "Borders" and "Shading" to practice these the way you would in a real game, without seeing the area code boundaries.
 
+{/* Dan: 1-2 sentences introducing the inline Japan quiz below — e.g. that you can drill it right here instead of (or before) heading to helloquiz, and that turning off Borders is the second drill stage. Also consider whether the paragraph above should still point at helloquiz first. */}
+
+<AreaCodeQuiz country="japan" />
+
 For example, the area code 078 (which I'll treat as 78) is the area code for the region around Kobe. My task is now to associate "Genghis Khan riding horses" with the Kobe area. You can use anything you know about the area to drive the association. The name of a major city, the shape of the region, anything you make up, whatever it is, as long as you find a memorable connection, you're doing it right. In my case, I know that Kobe is famous for its beef, so I imagine Genghis Khan on his horse herding cows like a cowboy. Thanks to this, whenever I see the number 78, I think of Genghis Khan, and this image helps me zoom in on and click Kobe every time.
 
 For a less straightforward example, 019 corresponds to Iwate prefecture, and to "Anchorman doing a news report" in my mnemonic list. For this, I imagine Ron Burgundy (the anchorman in the movie Anchorman) showing up, not finding anything newsworthy, and saying "I wait" as he waits for something interesting to happen. "I wait" is similar enough to Iwate (not how you pronounce that) that the memory sticks. One last example: 045 is Yokohama and "Dr. Eggman flying in his egg-mobile", and Yoko is similar to yolk, which is in eggs.
 
 As you can see, the connections made can be super tenuous, and the beauty is that they'll still work! If Japan comes easily, I recommend following it up with [Brazil](https://helloquiz.app/quiz/ktGyB5qaJTWb), which also has well-grouped two-digit area codes.
 
+{/* Dan: a short line introducing the inline Brazil quiz below. */}
+
+<AreaCodeQuiz country="brazil" />
+
 ## Three-Digit Codes
 
 And now we arrive at three-digit codes. The approach here is similar, though now we make use of the pairing system described at the end of Part I. In order to convert a three-digit number into an image, duplicate the central digit, then proceed as usual. In this way, an area code like 319 becomes 31-19, or "Captain America doing a news report", which he does in Cedar Rapids, Iowa, because Cedar is Captain America's favorite tree (starts with the same letter). As always, the rules are flexible. 414 is "Diego Armando turning water into wine", but 414 is DAD and Milwaukee, so I remember "Diego Armando turning water into milk", since he loves coffee, milk goes well with coffee, Milwaukee can be shortened to Milkee, and 414 is DAD and this seems like a dad joke to make about Milwaukee. 314 is St. Louis, so I skip the mnemonics altogether for this one, since surely they needed pi to architect the Gateway Arch in St. Louis.
 
 Ideally, you could learn these in chunks by region to avoid being overwhelmed, but I found no pre-existing quiz for doing so on helloquiz. As such, the method I used is to do [this quiz](https://helloquiz.app/quiz/iOpDvN7pVTzY?learn) in anki mode, meaning that it schedules reviews for the cards you've seen on a timer based on how well you remembered them the last time they came up. This ensures that each day you open the quiz, it first shows you the area codes you've already seen before introducing additional ones. Do this enough times, and you'll eventually have seen every card and reviewed the tough ones enough times to have them all memorized. As always, I recommend having the "Force Correct Click" button on when learning these.
+
+{/* Dan: the paragraph above says no chunked-by-region quiz exists — the quiz below now fills that gap with a region picker (New England → Pacific, plus All United States), so you'll want to rework that copy and introduce the quiz here. Overlay codes are asked one at a time; clicking any region that carries the code counts. */}
+
+<AreaCodeQuiz country="usa" />
 
 If you've already memorized Japan and Brazil, you should find doing this a breeze, even with the lack of ordering that the US area codes have.
 
