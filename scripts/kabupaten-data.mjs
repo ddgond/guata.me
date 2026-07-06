@@ -57,6 +57,7 @@ const MERGE_NESTED = new Set([
 const RENAME = {
 	317: 'Mempawah', // Kabupaten Pontianak was renamed Mempawah in 2014
 	232: 'Kota Banjar', // distinguish the Jawa Barat city from Kab. Banjar (Kalimantan Selatan)
+	445: 'Pasangkayu', // Mamuju Utara was renamed Pasangkayu in 2017
 };
 // The quiz's 399, plus Gayo Lues (12, coverage newer than the quiz), plus the
 // promoted kota, minus the nested kota dissolved away
