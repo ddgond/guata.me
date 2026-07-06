@@ -397,7 +397,13 @@ const { scope, initial } = Astro.props;
 <style>
 	kabupaten-quiz {
 		display: block;
-		margin: 1.5rem 0;
+		/* Bleed out of the article column: full viewport width minus a small
+		   gutter (which also absorbs the scrollbar), capped so it doesn't grow
+		   comically wide beyond a MacBook Pro screen */
+		--bleed: min(100vw - 2rem, 1700px);
+		width: var(--bleed);
+		margin-block: 1.5rem;
+		margin-inline: calc(50% - var(--bleed) / 2);
 		border: 1px solid var(--line);
 		border-radius: 6px;
 		overflow: hidden;
@@ -406,7 +412,8 @@ const { scope, initial } = Astro.props;
 		position: relative;
 	}
 	.map {
-		aspect-ratio: 4 / 5;
+		height: 65vh;
+		height: 65svh; /* small-viewport unit: stable when mobile URL bars show/hide */
 		background: #a2daf2;
 	}
 	/* Shorten Leaflet's 0.25s zoom transition — panning is locked while it runs */
