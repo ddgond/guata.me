@@ -65,6 +65,11 @@ const EXPECTED_COUNT = 400 + PROMOTE.size - MERGE_NESTED.size;
 console.log(`Fetching ${SOURCE} ...`);
 const source = await (await fetch(SOURCE)).json();
 
+// A few GADM names arrive letter-spaced ("S I A K"); collapse to "Siak"
+const normalizeName = (name) =>
+	/^[A-Z]( [A-Z])+$/.test(name)
+		? name.replaceAll(' ', '').replace(/(?<=.)[A-Z]+/, (rest) => rest.toLowerCase())
+		: name;
 const normalizeProvince = (province) =>
 	// One Aceh feature still carries the pre-2009 province name; GADM also
 	// title-cases the DKI acronym
@@ -78,7 +83,7 @@ source.features.forEach((feature, i) => {
 	if (!isIncluded(feature, i)) return;
 	feature.properties = {
 		key: i,
-		name: RENAME[i] ?? feature.properties.name,
+		name: RENAME[i] ?? normalizeName(feature.properties.name),
 		province: normalizeProvince(feature.properties.province),
 	};
 	included.push(feature);
