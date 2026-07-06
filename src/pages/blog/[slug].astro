@@ -13,7 +13,7 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<Layout title={post.data.title} active="blog">
+<Layout title={post.data.title} active="blog" description={post.data.description}>
 	<a class="back" href="/blog">← Blog</a>
 	<h1>{post.data.title}</h1>
 	{

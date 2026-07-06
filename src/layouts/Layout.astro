@@ -7,18 +7,17 @@ interface Props {
 	title: string;
 	active: string;
 	showNavLogo?: boolean;
+	description?: string;
 }
 
-const { title, active, showNavLogo = true } = Astro.props;
+const { title, active, showNavLogo = true, description = "Dan Dangond's personal site." } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		{/* TODO(dan): write a meta description in your voice, e.g.
-		    <meta name="description" content="..." /> — one sentence about who you
-		    are and what's on the site, used by search results and link previews. */}
+		<meta name="description" content={description} />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="alternate" type="application/rss+xml" title="Dan Dangond · Blog" href="/rss.xml" />
