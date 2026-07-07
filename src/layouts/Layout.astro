@@ -23,6 +23,16 @@ const { title, active, showNavLogo = true, description = "Dan Dangond's personal
 		<link rel="alternate" type="application/rss+xml" title="Dan Dangond · Blog" href="/rss.xml" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title} · Dan Dangond</title>
+		{
+			import.meta.env.PROD && (
+				<script
+					is:inline
+					defer
+					src="https://umami.guata.me/script.js"
+					data-website-id="108a34f1-5473-424a-84ff-05e1a8c3d5dc"
+				/>
+			)
+		}
 	</head>
 	<body>
 		<main>
