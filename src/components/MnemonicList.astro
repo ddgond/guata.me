@@ -14,7 +14,7 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 ---
 
 <div class="mnemonics">
-	<ul class="mapping" aria-label="Digit to letter mapping">
+	<ul id="mnemonic-mapping" class="mapping" aria-label="Digit to letter mapping">
 		{
 			digitLetters.split('').map((letter, digit) => (
 				<li>
@@ -39,28 +39,60 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 		<p id="mnemonic-result" class="result hint" aria-live="polite">{exampleResult}</p>
 		<hr />
 
-		<ul id="mnemonic-entries" class="entries">
-			{
-				mnemonics.map((m) => (
-					<li data-number={m.number}>
-						<span class="code">
-							{m.number} • {lettersFor(m.number)}
-						</span>
-						<span class="image">
-							<span class="person">{m.person}</span>
-							<span class="action">{m.action}</span>
-						</span>
-					</li>
-				))
-			}
-		</ul>
+		<div class="entries-scroll">
+			<ul id="mnemonic-entries" class="entries">
+				{
+					mnemonics.map((m) => (
+						<li data-number={m.number}>
+							<span class="code">
+								{m.number} • {lettersFor(m.number)}
+							</span>
+							<span class="image">
+								<span class="person">{m.person}</span>
+								<span class="action">{m.action}</span>
+							</span>
+						</li>
+					))
+				}
+			</ul>
+		</div>
 	</div>
 </div>
 
 <script>
+	import { dominicStorageKey } from '../data/mnemonics';
+
 	const input = document.getElementById('mnemonic-lookup') as HTMLInputElement;
 	const result = document.getElementById('mnemonic-result')!;
-	const exampleResult = result.textContent;
+
+	// Swap in the reader's own list from the builder page before the entries
+	// are read out of the DOM, so the list and the lookups both use it
+	try {
+		const saved = JSON.parse(localStorage.getItem(dominicStorageKey) ?? 'null');
+		if (saved?.entries) {
+			const letters =
+				typeof saved.letters === 'string' && /^[A-Z]{10}$/.test(saved.letters)
+					? saved.letters
+					: null;
+			if (letters)
+				document
+					.querySelectorAll('#mnemonic-mapping li span:last-child')
+					.forEach((el, digit) => (el.textContent = letters[digit]));
+			document.querySelectorAll<HTMLElement>('#mnemonic-entries [data-number]').forEach((el) => {
+				const number = el.dataset.number!;
+				el.querySelector('.person')!.textContent = saved.entries[number]?.person ?? '';
+				el.querySelector('.action')!.textContent = saved.entries[number]?.action ?? '';
+				if (letters)
+					el.querySelector('.code')!.textContent = `${number} • ${number
+						.split('')
+						.map((digit) => letters[Number(digit)])
+						.join('')}`;
+			});
+		}
+	} catch {
+		// Corrupted saved state: keep the server-rendered defaults
+	}
+
 	const entries = new Map<string, { el: HTMLElement; person: string; action: string }>();
 	document.querySelectorAll<HTMLElement>('#mnemonic-entries [data-number]').forEach((el) => {
 		entries.set(el.dataset.number!, {
@@ -69,6 +101,14 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 			action: el.querySelector('.action')!.textContent!,
 		});
 	});
+
+	const example31 = entries.get('31')!;
+	const example19 = entries.get('19')!;
+	const exampleResult =
+		example31.person && example19.action
+			? `319 → 31-19 → ${example31.person} ${example19.action}`
+			: 'Type a 2- or 3-digit code';
+	result.textContent = exampleResult;
 
 	const highlighted: HTMLElement[] = [];
 	const highlight = (number: string) => {
@@ -100,6 +140,7 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 			highlight(first);
 			if (second !== first) highlight(second);
 		}
+		highlighted[0]?.scrollIntoView({ block: 'nearest' });
 	});
 </script>
 
@@ -163,6 +204,12 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 	}
 	.result.hint {
 		color: var(--ink-soft);
+	}
+	.entries-scroll {
+		max-height: 60vh;
+		overflow-y: auto;
+		/* Room for the highlight ring, which sits 1px outside each entry */
+		padding: 1px;
 	}
 	.entries {
 		columns: 2;
