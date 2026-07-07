@@ -130,6 +130,23 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 	.bar.status:empty {
 		display: none;
 	}
+	/* The hint button is created from the script, so it needs :global() too;
+	   styled like the site's links */
+	.bar.status :global(.hint) {
+		padding: 0;
+		background: none;
+		border: none;
+		font: inherit;
+		color: var(--sky);
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 3px;
+		cursor: pointer;
+	}
+	.bar.status :global(.hint:hover) {
+		color: var(--sky-deep);
+		background: var(--sky-tint);
+	}
 	.picker,
 	.start,
 	.progress-btn,

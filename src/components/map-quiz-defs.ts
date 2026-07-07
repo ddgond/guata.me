@@ -4,6 +4,7 @@
 // scripts/area-code-data.mjs). Importing this module registers them all.
 
 import { registerQuizzes, type BoundsLiteral, type QuizDef, type QuizFeature } from './map-quiz';
+import { dominicStorageKey, mnemonics as defaultMnemonics } from '../data/mnemonics';
 
 // --- kabupaten -----------------------------------------------------------
 
@@ -120,6 +121,44 @@ const kabupaten: QuizDef = {
 
 // --- area codes ----------------------------------------------------------
 
+// Mirrors the Dominic builder's load(): the reader's saved list wins when
+// present, and corrupted or missing state falls back to the default list.
+// Read on every hint so builder edits apply without a reload.
+const loadImages = () => {
+	let entries: { number: string; person: string; action: string }[] = defaultMnemonics;
+	const raw = localStorage.getItem(dominicStorageKey);
+	if (raw) {
+		try {
+			const saved = JSON.parse(raw);
+			entries = Object.entries(saved.entries ?? {}).map(([number, entry]) => ({
+				number,
+				person: String((entry as { person?: string })?.person ?? '').trim(),
+				action: String((entry as { action?: string })?.action ?? '').trim(),
+			}));
+		} catch {
+			// Corrupted saved state: hint from the defaults, like the builder
+		}
+	}
+	return new Map(entries.map((entry) => [entry.number, entry]));
+};
+
+// Dominic System image for an area code: "6" → the 06 image, "78" → the 78
+// image, and 3-digit codes duplicate the middle digit, taking the first
+// pair's person and the second pair's action (213 → 21-13).
+const dominicHint = (code: string): string => {
+	const images = loadImages();
+	const digits = code.padStart(2, '0');
+	const first = digits.slice(0, 2);
+	const second = digits.slice(-2);
+	const person = images.get(first)?.person;
+	const action = images.get(second)?.action;
+	if (person && action) return `${person} ${action}`;
+	const missing = [...new Set([person ? null : first, action ? null : second])].filter(
+		(pair): pair is string => pair !== null,
+	);
+	return `No mnemonic saved for ${missing.join(' or ')}`;
+};
+
 // Hand-drawn multi-state groups sized for one drill session each (17–54
 // codes), swept roughly east-to-west
 const US_REGIONS: Record<string, { label: string; states: string[] }> = {
@@ -153,6 +192,7 @@ const areaCodes = (country: string, countryLabel: string, overrides: Partial<Qui
 	label: (f) => f.properties.code,
 	// Overlay codes share a shape ("203/475") and are asked one at a time
 	prompts: (f) => f.properties.code.split('/'),
+	mnemonic: dominicHint,
 	labelsToggle: false,
 	modes: ['borders', 'neither'],
 	progressKey: 'area-code-progress',

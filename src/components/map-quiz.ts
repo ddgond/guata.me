@@ -31,6 +31,8 @@ export type QuizDef = {
 	label(feature: QuizFeature): string;
 	/** The quiz prompts a shape answers ("203/475" → ["203", "475"]) */
 	prompts(feature: QuizFeature): string[];
+	/** On-demand hint text for a prompt; omit for quizzes without hints */
+	mnemonic?(prompt: string): string;
 	/** Whether the Labels tile toggle renders; without it tiles stay labeled */
 	labelsToggle: boolean;
 	/** Toggle combinations tracked in the progress dialog, in column order */
@@ -579,7 +581,22 @@ class MapQuiz extends HTMLElement {
 		this.status.append('Find ');
 		const name = document.createElement('strong');
 		name.textContent = this.current!.prompt;
-		this.status.append(name, `. · ${this.completed}/${this.total}`);
+		const count = ` · ${this.completed}/${this.total}`;
+		if (!this.def.mnemonic) {
+			this.status.append(name, `.${count}`);
+			return;
+		}
+		// The hint stays hidden until asked for, and resets on every question
+		// (including recycled misses). Any status rewrite discards the button,
+		// so it can only fire while its own question is the current one.
+		const hint = document.createElement('button');
+		hint.type = 'button';
+		hint.className = 'hint';
+		hint.textContent = '(hint)';
+		hint.addEventListener('click', () =>
+			hint.replaceWith(` · ${this.def.mnemonic!(this.current!.prompt)}`),
+		);
+		this.status.append(name, ' ', hint, count);
 	}
 
 	clicked(layer: L.Path, feature: QuizFeature, event: L.LeafletMouseEvent) {
