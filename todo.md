@@ -1,3 +1,4 @@
-Write copy for the three {/* Dan: ... */} placeholders in the area codes post introducing the inline quizzes, and rework the paragraph that says no chunked-by-region US quiz exists (the inline quiz's region picker now covers that).
-Write copy for the [PLACEHOLDER: ...] markers in the source (currently one in DominicQuiz.astro, shown when there are no complete entries to quiz).
-Swap the order of parts II and III in the area codes post so the reader gets to see the mnemonics before the application section.
+Quiz progress entries marked as 100% should store how long it took to complete, with faster times being better. This gives players something to aim for after basic mastery.
+Make the mnemonic list in the blog post collapsible.
+Make the mnemonic list in the blog post load the user's list if it exists, and edit the sentence above to say "You can edit your own list here and it'll update the list shown on this page.
+Integrate dominic system mnemonics in a meaningful way with the area code quizzes.
