@@ -1,9 +1,17 @@
 // Quiz definitions for the <map-quiz> element: the kabupaten quiz
-// (/data/kabupaten.json, regenerate with scripts/kabupaten-data.mjs) and the
+// (/data/kabupaten.json, regenerate with scripts/kabupaten-data.mjs), the
 // Japan/Brazil/US area-code quizzes (/data/area-codes-*.json, regenerate with
-// scripts/area-code-data.mjs). Importing this module registers them all.
+// scripts/area-code-data.mjs), and the German Landkreise quiz
+// (/data/landkreise.json, regenerate with scripts/landkreis-data.mjs).
+// Importing this module registers them all.
 
-import { registerQuizzes, type BoundsLiteral, type QuizDef, type QuizFeature } from './map-quiz';
+import {
+	registerQuizzes,
+	type BoundsLiteral,
+	type ProgressRow,
+	type QuizDef,
+	type QuizFeature,
+} from './map-quiz';
 import { dominicStorageKey, mnemonics as defaultMnemonics } from '../data/mnemonics';
 
 // --- kabupaten -----------------------------------------------------------
@@ -87,6 +95,23 @@ const kabupaten: QuizDef = {
 				label: region.label,
 			}));
 		const provinces = new Set(features.map((f) => f.properties.province));
+		// One dropdown covering every drill: whole country, whole regions, and
+		// provinces. Values are the scope keys, so progress lines up with the
+		// single-scope embeds in the blog post.
+		if (scope === 'combined')
+			return [
+				{ value: 'all', label: 'All Indonesia' },
+				...Object.entries(KABUPATEN_REGIONS).flatMap(([key, region]) => [
+					{ value: `region:${key}`, label: `All ${region.label}`, group: region.label },
+					...region.provinces
+						.filter((province) => provinces.has(province))
+						.map((province) => ({
+							value: `province:${province}`,
+							label: province,
+							group: region.label,
+						})),
+				]),
+			];
 		return Object.values(KABUPATEN_REGIONS).flatMap((region) =>
 			region.provinces
 				.filter((province) => provinces.has(province))
@@ -94,6 +119,10 @@ const kabupaten: QuizDef = {
 		);
 	},
 	filter(scope, selection, features) {
+		if (scope === 'combined') {
+			if (!selection || selection === 'all') return features;
+			[scope, selection] = selection.split(/:(.*)/s) as [string, string];
+		}
 		if (scope === 'province') return features.filter((f) => f.properties.province === selection);
 		if (scope === 'region')
 			return features.filter((f) =>
@@ -101,7 +130,8 @@ const kabupaten: QuizDef = {
 			);
 		return features;
 	},
-	scopeKey: (scope, selection) => (scope === 'all' ? 'all' : `${scope}:${selection}`),
+	scopeKey: (scope, selection) =>
+		scope === 'combined' ? (selection ?? 'all') : scope === 'all' ? 'all' : `${scope}:${selection}`,
 	progressRows(scope, features) {
 		if (scope === 'all') return [{ label: 'All Indonesia', key: 'all' }];
 		if (scope === 'region')
@@ -110,6 +140,17 @@ const kabupaten: QuizDef = {
 				key: `region:${key}`,
 			}));
 		const provinces = new Set(features.map((f) => f.properties.province));
+		if (scope === 'combined')
+			return [
+				{ label: 'All Indonesia', key: 'all' },
+				...Object.entries(KABUPATEN_REGIONS).flatMap(([key, region]): ProgressRow[] => [
+					{ group: region.label },
+					{ label: `All ${region.label}`, key: `region:${key}` },
+					...region.provinces
+						.filter((province) => provinces.has(province))
+						.map((province) => ({ label: province, key: `province:${province}` })),
+				]),
+			];
 		return Object.values(KABUPATEN_REGIONS).flatMap((region) => [
 			{ group: region.label },
 			...region.provinces
@@ -117,6 +158,53 @@ const kabupaten: QuizDef = {
 				.map((province) => ({ label: province, key: `province:${province}` })),
 		]);
 	},
+};
+
+// --- German Landkreise ---------------------------------------------------
+
+// Labels for the region keys scripts/landkreis-data.mjs writes into the data:
+// Bundesländer with the city-states and smallest states folded into a
+// neighbor and Bayern split at the Franken/Oberpfalz line, swept roughly
+// north-to-south
+const LANDKREIS_REGIONS: Record<string, string> = {
+	north: 'Schleswig-Holstein, Hamburg & MV',
+	niedersachsen: 'Niedersachsen & Bremen',
+	brandenburg: 'Berlin & Brandenburg',
+	'sachsen-anhalt': 'Sachsen-Anhalt',
+	sachsen: 'Sachsen',
+	thueringen: 'Thüringen',
+	nrw: 'Nordrhein-Westfalen',
+	hessen: 'Hessen',
+	'rlp-saarland': 'Rheinland-Pfalz & Saarland',
+	bw: 'Baden-Württemberg',
+	nordbayern: 'Nordbayern (Franken & Oberpfalz)',
+	suedbayern: 'Südbayern',
+};
+
+const landkreise: QuizDef = {
+	dataUrl: '/data/landkreise.json',
+	attribution:
+		'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a> via <a href="https://helloquiz.app">helloquiz</a>',
+	label: (f) => f.properties.name,
+	prompts: (f) => [f.properties.name],
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'landkreis-progress',
+	skipConfirmKey: 'landkreis-skip-toggle-confirm',
+	uiKey: () => 'landkreis-ui',
+	pickerEntries: () => [
+		...Object.entries(LANDKREIS_REGIONS).map(([value, label]) => ({ value, label })),
+		{ value: 'all', label: 'All Germany' },
+	],
+	filter: (_scope, selection, features) =>
+		!selection || selection === 'all'
+			? features
+			: features.filter((f) => f.properties.region === selection),
+	scopeKey: (_scope, selection) => `de:${selection ?? 'all'}`,
+	progressRows: () => [
+		...Object.entries(LANDKREIS_REGIONS).map(([key, label]) => ({ label, key: `de:${key}` })),
+		{ label: 'All Germany', key: 'de:all' },
+	],
 };
 
 // --- area codes ----------------------------------------------------------
@@ -206,6 +294,7 @@ const areaCodes = (country: string, countryLabel: string, overrides: Partial<Qui
 
 registerQuizzes({
 	kabupaten,
+	landkreise,
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
 	'area-us': areaCodes('us', 'United States', {

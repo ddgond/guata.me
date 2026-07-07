@@ -1,0 +1,71 @@
+---
+// Listing of the standalone find-on-map quiz pages (quiz-pages.ts), grouped
+// into subdivision and area-code quizzes and styled after the tools list on
+// /geoguessr.
+
+import Layout from '../../../layouts/Layout.astro';
+import { quizPages } from '../../../data/quiz-pages';
+
+const sections = [
+	{
+		key: 'subdivisions',
+		heading: 'Subdivisions',
+		intro:
+			'Quizzes for locating subdivisions within a country. Read ' +
+			'<a href="/blog/memorizing-kabupaten">this post</a> (originally written for kabupaten) ' +
+			'to learn my recommended approach for studying these.',
+	},
+	{
+		key: 'area-codes',
+		heading: 'Area Codes',
+		intro:
+			'Quizzes for locating area codes within a country. Read ' +
+			'<a href="/blog/memorizing-area-codes">this post</a> to learn my recommended approach ' +
+			'for studying these.',
+	},
+] as const;
+---
+
+<Layout
+	title="GeoGuessr Quizzes"
+	active="geoguessr"
+	description="A collection of quizzes I find particularly valuable for GeoGuessr."
+>
+	<h2 class="section">Quizzes</h2>
+	<p>A collection of quizzes I find particularly valuable for GeoGuessr.</p>
+
+	{
+		sections.map((section) => (
+			<>
+				<h2 class="section">{section.heading}</h2>
+				<p set:html={section.intro} />
+				<ul class="quizzes">
+					{quizPages
+						.filter((page) => page.section === section.key)
+						.map((page) => (
+							<li>
+								<a href={`/geoguessr/quizzes/${page.slug}`}>{page.title}</a>
+								<p class="blurb">{page.stats}</p>
+							</li>
+						))}
+				</ul>
+			</>
+		))
+	}
+</Layout>
+
+<style>
+	.quizzes {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+	}
+	.blurb {
+		margin: 0.2rem 0 0;
+		color: var(--ink-soft);
+		font-size: 0.9rem;
+	}
+</style>

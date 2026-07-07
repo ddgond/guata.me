@@ -1,0 +1,26 @@
+---
+// Standalone page for one find-on-map quiz, generated per entry in
+// quiz-pages.ts. The quiz itself is the same MapQuizShell embed the blog
+// posts use, so progress carries over between the two.
+
+import Layout from '../../../layouts/Layout.astro';
+import MapQuizShell from '../../../components/MapQuizShell.astro';
+import { quizPages } from '../../../data/quiz-pages';
+
+export function getStaticPaths() {
+	return quizPages.map((page) => ({ params: { quiz: page.slug }, props: page }));
+}
+
+type Props = (typeof quizPages)[number];
+
+const { title, description, intro, quiz, scope, pickerLabel, labelsToggle } = Astro.props;
+---
+
+<Layout title={title} active="geoguessr" description={description}>
+	<h2 class="section">{title}</h2>
+	<p>{description} <Fragment set:html={intro} /></p>
+
+	<MapQuizShell quiz={quiz} scope={scope} pickerLabel={pickerLabel} labelsToggle={labelsToggle} />
+
+	<p><a href="/geoguessr/quizzes">← All quizzes</a></p>
+</Layout>
