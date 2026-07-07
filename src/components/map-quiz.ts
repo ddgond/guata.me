@@ -16,7 +16,8 @@ export type QuizFeature = Feature<Polygon | MultiPolygon, Record<string, string>
 type Item = { prompt: string; features: QuizFeature[] };
 
 export type ModeKey = 'borders' | 'neither' | 'labels';
-type CellRecord = { best: number; total: number };
+/** seconds is the fastest perfect-run time; absent until a 100% run finishes */
+type CellRecord = { best: number; total: number; seconds?: number };
 type ProgressStore = Record<string, Partial<Record<ModeKey, CellRecord>>>;
 
 export type PickerEntry = { value: string; label: string; group?: string };
@@ -78,6 +79,10 @@ const MODE_LABELS: Record<ModeKey, string> = {
 };
 const modeFromToggles = (borders: boolean, labels: boolean): ModeKey | null =>
 	labels ? (borders ? null : 'labels') : borders ? 'borders' : 'neither';
+
+// Perfect-run times render as "4m32s"; anything over an hour just caps out
+const formatSeconds = (seconds: number) =>
+	seconds >= 3600 ? '>1h' : `${Math.floor(seconds / 60)}m${String(seconds % 60).padStart(2, '0')}s`;
 
 const readStored = <T,>(key: string): T | null => {
 	try {
@@ -157,6 +162,7 @@ class MapQuiz extends HTMLElement {
 	runMode: ModeKey | null = null;
 	runVoided = true;
 	runScopeKey = '';
+	runStartedAt = 0;
 
 	connectedCallback() {
 		const observer = new IntersectionObserver(
@@ -344,14 +350,25 @@ class MapQuiz extends HTMLElement {
 	}
 
 	// A finished run with its toggles locked to a tracked combo updates that
-	// cell when it beats the stored best
-	recordRun(score: number) {
+	// cell when it beats the stored best: a higher score, or — once both runs
+	// are perfect — a faster time
+	recordRun(score: number, elapsed: number) {
 		if (!this.runMode || this.runVoided) return;
 		const store = readStored<ProgressStore>(this.def.progressKey) ?? {};
 		const cells = (store[this.runScopeKey] ??= {});
 		const prev = cells[this.runMode];
-		if (!prev || score / this.total > prev.best / prev.total) {
-			cells[this.runMode] = { best: score, total: this.total };
+		const seconds = score >= this.total ? elapsed : undefined;
+		const beatsScore = !prev || score / this.total > prev.best / prev.total;
+		const beatsTime =
+			seconds !== undefined &&
+			prev !== undefined &&
+			prev.best >= prev.total &&
+			(prev.seconds === undefined || seconds < prev.seconds);
+		if (beatsScore || beatsTime) {
+			cells[this.runMode] =
+				seconds === undefined
+					? { best: score, total: this.total }
+					: { best: score, total: this.total, seconds };
 			writeStored(this.def.progressKey, store);
 		}
 	}
@@ -390,7 +407,9 @@ class MapQuiz extends HTMLElement {
 				if (!record) continue;
 				if (record.best >= record.total) {
 					cell.className = 'done';
-					cell.textContent = '✓';
+					// Pre-timing perfect records keep the plain checkmark
+					cell.textContent =
+						record.seconds === undefined ? '✓' : formatSeconds(record.seconds);
 				} else {
 					cell.className = 'tried';
 					cell.textContent = `${Math.floor((record.best / record.total) * 100)}%`;
@@ -500,6 +519,7 @@ class MapQuiz extends HTMLElement {
 		if (this.runMode && !this.def.modes.includes(this.runMode)) this.runMode = null;
 		this.runVoided = this.runMode === null;
 		this.runScopeKey = this.scopeKey();
+		this.runStartedAt = Date.now();
 		const byPrompt = new Map<string, Item>();
 		for (const { feature } of this.layers) {
 			for (const prompt of this.def.prompts(feature)) {
@@ -544,9 +564,10 @@ class MapQuiz extends HTMLElement {
 		const next = this.queue.shift();
 		if (!next) {
 			const score = this.total - this.missed.size;
-			this.recordRun(score);
+			const elapsed = Math.round((Date.now() - this.runStartedAt) / 1000);
+			this.recordRun(score, elapsed);
 			this.endQuiz(true);
-			this.status.textContent = `Final score: ${score}/${this.total} on the first try.`;
+			this.status.textContent = `Final score: ${score}/${this.total} in ${formatSeconds(elapsed)}.`;
 			return;
 		}
 		this.current = next;
