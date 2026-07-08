@@ -6,10 +6,11 @@ super-duper.fr (flamby's collection) for area codes. Verified 2026-07 by
 `compare-sources.mjs`; re-run it if either side may have drifted (it exits
 nonzero when a relationship below no longer holds).
 
-Decision as of 2026-07: **no migration.** All five quizzes keep building from
-emily.bz. This doc exists so we know our fallbacks if emily.bz disappears, and
-which direct sources future quizzes can pull from without waiting for a
-helloquiz quiz to exist.
+Status as of 2026-07: **the exact-match quizzes are migrated.** Germany
+builds from GADM directly and Japan/Brazil from super-duper.fr; their
+emily.bz mirrors are the documented fallback if those hosts are down. The US
+(hand-edited derivative) and Indonesia (no public counterpart) still build
+from emily.bz.
 
 ## Per-quiz verdicts
 
@@ -17,18 +18,19 @@ helloquiz quiz to exist.
 
 `emily.bz/geojson/subdivision/DE_2.json` is a **byte-identical mirror** of
 GADM 4.1's `gadm41_DEU_2.json` (served zipped from geodata.ucdavis.edu).
-Migration is a URL swap plus an unzip step. Everything the script keys on
-(`CC_2` Kreisschlüssel, `NAME_1`, `TYPE_2`) is GADM's own schema.
+Everything the script keys on (`CC_2` Kreisschlüssel, `NAME_1`, `TYPE_2`) is
+GADM's own schema. **Migrated:** the script fetches GADM directly; swap the
+URL back to the emily.bz mirror if geodata.ucdavis.edu is down or throttling.
 
 ### Japan & Brazil area codes (`area-code-data.mjs`)
 
 `emily.bz/geojson/phone/JP_2.json` / `BR_2.json` are super-duper's
 `japan_areacodes.geojson` / `brazil_areacodes.geojson` with the extra props
 stripped (super-duper also carries `City` and label anchor points): same
-features, same order, same geometry, same `AreaCode` values. Migration is a
-URL swap. The helloquiz question API would still be needed only if we want
-their curated question lists; for JP/BR the codes in the geojson match the
-questions 1:1 already.
+features, same order, same geometry, same `AreaCode` values. **Migrated:**
+the script fetches super-duper directly and reads codes from the `AreaCode`
+props — the helloquiz question list matched them 1:1, so it's no longer
+fetched for these two. The emily.bz mirrors remain the fallback.
 
 ### US area codes (`area-code-data.mjs`)
 

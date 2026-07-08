@@ -1,8 +1,9 @@
 // Builds public/data/landkreise.json for the German Landkreise quiz.
 //
-// Downloads the GADM level-2 boundaries of Germany that helloquiz.app's
-// "Germany subdivisions (lvl2)" quiz (https://helloquiz.app/quiz/erVfCvEjr9Y9)
-// is built on, with three adjustments: the Bodensee waterbody shape is
+// Downloads the GADM 4.1 level-2 boundaries of Germany (the same file
+// helloquiz.app's "Germany subdivisions (lvl2)" quiz,
+// https://helloquiz.app/quiz/erVfCvEjr9Y9, is built on), with three
+// adjustments: the Bodensee waterbody shape is
 // dropped, kreisfreie Städte with a same-named surrounding Landkreis are
 // dissolved into it so each name is one shape (the kota treatment from
 // kabupaten-data.mjs), and two districts GADM still shows but Germany has
@@ -21,10 +22,11 @@
 //
 // Usage: node scripts/landkreis-data.mjs
 
-import { dataPath, fetchJson, simplifyAndWrite } from './lib/quiz-data.mjs';
+import { dataPath, fetchZippedJson, simplifyAndWrite } from './lib/quiz-data.mjs';
 
-// A byte-identical mirror of GADM 4.1's gadm41_DEU_2.json (see data-sources.md)
-const SOURCE = 'https://emily.bz/geojson/subdivision/DE_2.json';
+// emily.bz/geojson/subdivision/DE_2.json mirrors this byte-for-byte if GADM
+// is unreachable (see data-sources.md)
+const SOURCE = 'https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_DEU_2.json.zip';
 const OUTPUT = dataPath('landkreise.json');
 
 // Districts that no longer exist, dissolved into the Kreis that absorbed them
@@ -133,7 +135,7 @@ const EXPECTED_REGIONS = {
 };
 const EXPECTED_COUNT = Object.values(EXPECTED_REGIONS).reduce((a, b) => a + b, 0);
 
-const source = await fetchJson(SOURCE);
+const source = await fetchZippedJson(SOURCE);
 
 // "München(KreisfreieStadt)" → "München"; the closing paren is optional
 // because Kaiserslautern's suffix hits GADM's name-length truncation

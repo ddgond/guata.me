@@ -210,8 +210,7 @@ const LANDKREIS_REGIONS: Record<string, string> = {
 
 const landkreise: QuizDef = {
 	dataUrl: '/data/landkreise.json',
-	attribution:
-		'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a> via <a href="https://helloquiz.app">helloquiz</a>',
+	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
 	label: (f) => f.properties.name,
 	prompts: (f) => [f.properties.name],
 	labelsToggle: true,
@@ -291,7 +290,8 @@ const LOWER_48: BoundsLiteral = [
 
 const areaCodes = (country: string, countryLabel: string, overrides: Partial<QuizDef>): QuizDef => ({
 	dataUrl: `/data/area-codes-${country}.json`,
-	attribution: 'Imagery © Google · Boundaries via <a href="https://helloquiz.app">helloquiz</a>',
+	attribution:
+		'Imagery © Google · Boundaries via <a href="https://super-duper.fr/geojson/">super-duper</a>',
 	label: (f) => f.properties.code,
 	// Overlay codes share a shape ("203/475") and are asked one at a time
 	prompts: (f) => f.properties.code.split('/'),
@@ -313,6 +313,8 @@ registerQuizzes({
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
 	'area-us': areaCodes('us', 'United States', {
+		// The US boundaries are helloquiz's own edit, not a super-duper mirror
+		attribution: 'Imagery © Google · Boundaries via <a href="https://helloquiz.app">helloquiz</a>',
 		...regionDrill(
 			'us',
 			Object.fromEntries(Object.entries(US_REGIONS).map(([key, region]) => [key, region.label])),

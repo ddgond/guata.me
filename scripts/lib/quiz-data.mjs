@@ -15,6 +15,14 @@ export const fetchJson = async (url) => {
 	return (await fetch(url)).json();
 };
 
+// GADM only serves its geojson zipped (one json inside each zip)
+export const fetchZippedJson = async (url) => {
+	console.log(`Fetching ${url} ...`);
+	const zip = join(tmpdir(), basename(url));
+	writeFileSync(zip, Buffer.from(await (await fetch(url)).arrayBuffer()));
+	return JSON.parse(execFileSync('unzip', ['-p', zip], { maxBuffer: 256 * 1024 * 1024 }));
+};
+
 /** Absolute path of a file under public/data, where quiz data files live */
 export const dataPath = (file) => new URL(`../../public/data/${file}`, import.meta.url).pathname;
 
