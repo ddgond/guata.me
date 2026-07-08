@@ -587,13 +587,17 @@ class MapQuiz extends HTMLElement {
 	}
 
 	showPrompt() {
+		// The status bar is a flex row (message left, optional Skip right), so
+		// the message text always goes inside a single wrapper span
 		this.status.innerHTML = '';
-		this.status.append('Find ');
+		const message = document.createElement('span');
+		this.status.append(message);
+		message.append('Find ');
 		const name = document.createElement('strong');
 		name.textContent = this.current!.prompt;
 		const count = ` · ${this.completed}/${this.total}`;
 		if (!this.def.hint) {
-			this.status.append(name, `.${count}`);
+			message.append(name, `.${count}`);
 			return;
 		}
 		// The hint stays hidden until asked for, and resets on every question
@@ -606,7 +610,7 @@ class MapQuiz extends HTMLElement {
 		hint.addEventListener('click', () =>
 			hint.replaceWith(` · ${this.def.hint!(this.current!.prompt, this.current!.features)}`),
 		);
-		this.status.append(name, ' ', hint, count);
+		message.append(name, ' ', hint, count);
 	}
 
 	clicked(layer: L.Path, feature: QuizFeature, event: L.LeafletMouseEvent) {
@@ -645,7 +649,24 @@ class MapQuiz extends HTMLElement {
 			guess.textContent = this.def.label(feature);
 			const name = document.createElement('strong');
 			name.textContent = this.current.prompt;
-			this.status.append('That was ', guess, '. ', name, ' is highlighted. Click it to continue.');
+			// Skip hunting down the highlighted answer; the miss still recycles
+			// to the end of the queue. Rewriting the status discards the button,
+			// so like the hint it can only fire on its own question.
+			const skip = document.createElement('button');
+			skip.type = 'button';
+			skip.className = 'skip';
+			skip.textContent = 'Skip';
+			skip.addEventListener('click', () => {
+				const item = this.current!;
+				this.revealed = null;
+				for (const target of item.features)
+					this.layerFor(target).setStyle(this.styleFor(target));
+				this.queue.push(item);
+				this.nextQuestion();
+			});
+			const message = document.createElement('span');
+			message.append('That was ', guess, '. ', name, ' is highlighted. Click it to continue.');
+			this.status.append(message, skip);
 		}
 	}
 }

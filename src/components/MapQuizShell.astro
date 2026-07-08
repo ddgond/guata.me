@@ -122,8 +122,10 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 		border-top: 1px solid var(--line);
 		color: var(--ink-soft);
 	}
+	/* Message text on the left (always inside one wrapper span so the flex
+	   layout can't split it), the Skip button on the right */
 	.bar.status {
-		display: block;
+		justify-content: space-between;
 		border-bottom: 1px solid var(--line);
 		min-height: 2.4em;
 	}
@@ -150,7 +152,8 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 	.picker,
 	.start,
 	.progress-btn,
-	.dialog-actions button {
+	.dialog-actions button,
+	.bar.status :global(.skip) {
 		font: inherit;
 		color: inherit;
 		background: none;
@@ -164,9 +167,14 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 		cursor: pointer;
 		white-space: nowrap;
 	}
+	/* The skip button is created from the script, so it needs :global() */
+	.bar.status :global(.skip) {
+		cursor: pointer;
+	}
 	.start:hover:not(:disabled),
 	.progress-btn:hover,
-	.dialog-actions button:hover {
+	.dialog-actions button:hover,
+	.bar.status :global(.skip:hover) {
 		border-color: var(--sky-line);
 	}
 	.start:disabled {
