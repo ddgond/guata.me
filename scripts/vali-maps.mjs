@@ -1,8 +1,10 @@
-// Generates a GeoGuessr practice map for every drill region of every map
-// quiz (plus each quiz's all-country drill) with Vali
+// Generates a GeoGuessr practice map for every playable drill of every map
+// quiz — each quiz's regions, any finer or coarser tiers it drills (the
+// kabupaten quiz's provinces, the Landkreise quiz's North/Central/South
+// bands), and the all-country drill — with Vali
 // (https://github.com/slashP/Vali). Each quiz boundary file in public/data
-// becomes a set of Vali geometry filters — one map per region, containing
-// only street view locations inside that region's quiz shapes — so a drill
+// becomes a set of Vali geometry filters — one map per drill, containing
+// only street view locations inside that drill's quiz shapes — so a drill
 // you just studied can be played in GeoGuessr with the same boundaries.
 //
 // Vali is provided by nix-shell (nix/vali.nix) and keeps its per-country
@@ -35,10 +37,11 @@ import { dataPath } from './lib/quiz-data.mjs';
 const LOCATION_GOAL = 50000;
 const MIN_MIN_DISTANCE = 25;
 
-// Region groupings for the two quizzes whose data files don't carry a region
-// property (kabupaten features have a province, US area codes a state).
-// Copied from the drill tables in src/components/map-quiz-defs.ts — keep in
-// sync; a feature that maps to no region fails the run below.
+// Drill groupings the data files don't carry directly: kabupaten features
+// have a province and US area codes a state (their regions are groups of
+// those), and the Landkreise bands are groups of the region property. Copied
+// from the drill tables in src/components/map-quiz-defs.ts — keep in sync; a
+// feature that maps to no group fails the run below.
 const KABUPATEN_REGIONS = {
 	java: [
 		'Banten',
@@ -89,27 +92,42 @@ const US_REGIONS = {
 	mountain: ['MT', 'WY', 'CO', 'NM', 'AZ', 'UT', 'ID', 'NV'],
 	pacific: ['WA', 'OR', 'CA', 'AK', 'HI'],
 };
+// The band- prefix mirrors the quiz's band: scope keys and keeps the North
+// band from colliding with the north region's files
+const LANDKREIS_BANDS = {
+	'band-north': ['north', 'niedersachsen', 'brandenburg', 'sachsen-anhalt', 'sachsen'],
+	'band-central': ['thueringen', 'nrw', 'hessen', 'rlp-saarland'],
+	'band-south': ['bw', 'nordbayern', 'suedbayern'],
+};
 const invert = (groups) =>
 	Object.fromEntries(
 		Object.entries(groups).flatMap(([region, members]) => members.map((m) => [m, region])),
 	);
 const KABUPATEN_REGION_BY_PROVINCE = invert(KABUPATEN_REGIONS);
 const US_REGION_BY_STATE = invert(US_REGIONS);
+const LANDKREIS_BAND_BY_REGION = invert(LANDKREIS_BANDS);
 
-// regionOf keys each feature into a drill region; quizzes without one only
-// get the all-country map
+// File-safe map name for drills keyed by a display name ("DKI Jakarta")
+const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+// Each grouping keys every feature into one map per drill of that tier;
+// quizzes with no groupings only get the all-country map
 const QUIZZES = {
-	landkreise: { data: 'landkreise.json', country: 'DE', regionOf: (p) => p.region },
-	'japan-cities': { data: 'japan-cities.json', country: 'JP', regionOf: (p) => p.region },
+	landkreise: {
+		data: 'landkreise.json',
+		country: 'DE',
+		groupings: [(p) => p.region, (p) => LANDKREIS_BAND_BY_REGION[p.region]],
+	},
+	'japan-cities': { data: 'japan-cities.json', country: 'JP', groupings: [(p) => p.region] },
 	kabupaten: {
 		data: 'kabupaten.json',
 		country: 'ID',
-		regionOf: (p) => KABUPATEN_REGION_BY_PROVINCE[p.province],
+		groupings: [(p) => KABUPATEN_REGION_BY_PROVINCE[p.province], (p) => slug(p.province)],
 	},
 	'area-us': {
 		data: 'area-codes-us.json',
 		country: 'US',
-		regionOf: (p) => US_REGION_BY_STATE[p.state],
+		groupings: [(p) => US_REGION_BY_STATE[p.state]],
 	},
 	'area-jp': { data: 'area-codes-jp.json', country: 'JP' },
 	'area-br': { data: 'area-codes-br.json', country: 'BR' },
@@ -168,22 +186,29 @@ const ensureCountryData = (country) => {
 let generated = 0;
 let skipped = 0;
 for (const quiz of quizzes) {
-	const { data, country, regionOf } = QUIZZES[quiz];
+	const { data, country, groupings = [] } = QUIZZES[quiz];
 	const outDir = new URL(`../vali-maps/${quiz}/`, import.meta.url).pathname;
 	mkdirSync(outDir, { recursive: true });
 
 	const { features } = JSON.parse(readFileSync(dataPath(data), 'utf8'));
 	const regions = new Map();
-	if (regionOf) {
+	for (const groupOf of groupings) {
+		const groups = new Map();
 		for (const feature of features) {
-			const region = regionOf(feature.properties);
-			if (!region) {
+			const group = groupOf(feature.properties);
+			if (!group) {
 				throw new Error(
-					`${quiz}: no region for ${JSON.stringify(feature.properties)} — is the grouping table above out of sync with map-quiz-defs.ts?`,
+					`${quiz}: no group for ${JSON.stringify(feature.properties)} — is a grouping table above out of sync with map-quiz-defs.ts?`,
 				);
 			}
-			if (!regions.has(region)) regions.set(region, []);
-			regions.get(region).push(feature);
+			if (!groups.has(group)) groups.set(group, []);
+			groups.get(group).push(feature);
+		}
+		for (const [group, groupFeatures] of groups) {
+			if (regions.has(group) || group === 'all') {
+				throw new Error(`${quiz}: two drills would share the map name "${group}"`);
+			}
+			regions.set(group, groupFeatures);
 		}
 	}
 	regions.set('all', features);
