@@ -16,3 +16,14 @@ rendering wrong. Higher `order` values appear first on the page.
 `scripts/generate-logo.py [logo|favicon|all]` regenerates
 `src/images/dan-dangond-logo.png` (needs Pillow) and `public/favicon.svg`
 (needs fontTools).
+
+## GeoGuessr maps for the quizzes
+`npm run vali-maps [-- <quiz ...> --force]` generates a GeoGuessr map for
+every drill region of every map quiz (plus each all-country drill) with
+[Vali](https://github.com/slashP/Vali), using the quiz boundary files in
+`public/data/` as geometry filters. Vali comes from `nix-shell` (packaged in
+`nix/vali.nix`) and downloads its per-country location pool to
+`~/.cache/vali` on first use. Maps land in
+`vali-maps/<quiz>/<region>-locations.json`, ready to import into
+[map-making.app](https://map-making.app/); regions whose boundaries haven't
+changed since the last run are skipped, `--force` regenerates them anyway.

@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "new-project": "node scripts/new-project.mjs",
+    "vali-maps": "node scripts/vali-maps.mjs",
     "blog": "node scripts/blog.mjs"
   },
   "dependencies": {
