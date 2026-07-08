@@ -14,6 +14,20 @@ import {
 	type QuizFeature,
 } from './map-quiz';
 import { dominicStorageKey, mnemonics as defaultMnemonics } from '../data/mnemonics';
+import { quizPages } from '../data/quiz-pages';
+
+// Share info for the completion Share button, from the standalone-page
+// registry: the page title plus the /geoguessr/quizzes/ path the link opens.
+// `drill` maps a finished run's scope and picker selection to that page's
+// ?drill= value; the default fits quizzes whose picker values are the same
+// everywhere, and null omits the param (no-picker quizzes).
+const share = (
+	quiz: string,
+	drill: QuizDef['share']['drill'] = (_scope, selection) => selection ?? 'all',
+): QuizDef['share'] => {
+	const page = quizPages.find((page) => page.quiz === quiz)!;
+	return { title: page.title, path: `/geoguessr/quizzes/${page.slug}`, drill };
+};
 
 // --- shared drill wiring ---------------------------------------------------
 
@@ -132,6 +146,11 @@ const KABUPATEN_REGIONS: Record<string, { label: string; provinces: string[] }> 
 	},
 };
 
+// Scope keys double as the combined picker's values, so they also serve as
+// share-link drill params no matter which embed a run happened on
+const kabupatenScopeKey: QuizDef['scopeKey'] = (scope, selection) =>
+	scope === 'combined' ? (selection ?? 'all') : scope === 'all' ? 'all' : `${scope}:${selection}`;
+
 const kabupaten: QuizDef = {
 	dataUrl: '/data/kabupaten.json',
 	attribution:
@@ -185,8 +204,8 @@ const kabupaten: QuizDef = {
 			);
 		return features;
 	},
-	scopeKey: (scope, selection) =>
-		scope === 'combined' ? (selection ?? 'all') : scope === 'all' ? 'all' : `${scope}:${selection}`,
+	scopeKey: kabupatenScopeKey,
+	share: share('kabupaten', kabupatenScopeKey),
 	progressRows(scope, features) {
 		if (scope === 'all') return [{ label: 'All Indonesia', key: 'all' }];
 		if (scope === 'region')
@@ -265,6 +284,7 @@ const landkreise: QuizDef = {
 	progressKey: 'landkreis-progress',
 	skipConfirmKey: 'landkreis-skip-toggle-confirm',
 	uiKey: () => 'landkreis-ui',
+	share: share('landkreise'),
 	...regionDrill(
 		'de',
 		LANDKREIS_REGIONS,
@@ -324,6 +344,7 @@ const japanCities: QuizDef = {
 	progressKey: 'japan-city-progress',
 	skipConfirmKey: 'japan-city-skip-toggle-confirm',
 	uiKey: () => 'japan-city-ui',
+	share: share('japan-cities'),
 	...regionDrill(
 		'jp',
 		JAPAN_CITY_REGIONS,
@@ -417,6 +438,7 @@ const areaCodes = (
 	progressKey: 'area-code-progress',
 	skipConfirmKey: 'area-code-skip-toggle-confirm',
 	uiKey: () => `area-code-ui:${country}`,
+	share: share(`area-${country}`, () => null),
 	filter: (_scope, _selection, features) => features,
 	scopeKey: () => country,
 	progressRows: () => [{ label: countryLabel, key: country }],
@@ -432,6 +454,7 @@ registerQuizzes({
 	'area-us': areaCodes('us', 'United States', {
 		// The US boundaries are helloquiz's own edit, not a super-duper mirror
 		attribution: 'Imagery © Google · Boundaries via <a href="https://helloquiz.app">helloquiz</a>',
+		share: share('area-us'),
 		...regionDrill(
 			'us',
 			Object.fromEntries(Object.entries(US_REGIONS).map(([key, region]) => [key, region.label])),

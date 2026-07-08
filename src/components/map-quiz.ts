@@ -1,8 +1,8 @@
 // Shared engine for the find-on-map quizzes (kabupaten, area codes). Holds
 // the <map-quiz> custom element: Leaflet map, quiz loop, progress tracking,
-// and dialogs. Each quiz registers a QuizDef describing its data file,
-// prompts, picker, and storage keys — see map-quiz-defs.ts. The markup the
-// element expects lives in MapQuizShell.astro.
+// share links, and dialogs. Each quiz registers a QuizDef describing its data
+// file, prompts, picker, and storage keys — see map-quiz-defs.ts. The markup
+// the element expects lives in MapQuizShell.astro.
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -57,6 +57,13 @@ export type QuizDef = {
 	progressRows(scope: string | undefined, features: QuizFeature[]): ProgressRow[];
 	/** Explicit initial view for scopes whose natural bounds are unhelpful */
 	fitBounds?(scope: string | undefined, selection: string | null): BoundsLiteral | null;
+	/** Completion share text: the quiz title, the standalone page the link
+	 * opens, and the page's ?drill= value for a run (null omits the param) */
+	share: {
+		title: string;
+		path: string;
+		drill(scope: string | undefined, selection: string | null): string | null;
+	};
 };
 
 // The basemap tiles helloquiz uses: Google's roadmap endpoint, in a labeled
@@ -173,6 +180,10 @@ class MapQuiz extends HTMLElement {
 	// when a toggle changes mid-run
 	runMode: ModeKey | null = null;
 	runVoided = true;
+	// Separate from voiding: a mid-run toggle flip also drops the Share
+	// button, since the final toggles no longer describe the whole run.
+	// Untracked combos stay shareable.
+	runToggled = false;
 	runScopeKey = '';
 	runStartedAt = 0;
 
@@ -208,6 +219,14 @@ class MapQuiz extends HTMLElement {
 		);
 		if (savedUI?.borders !== undefined) this.bordersBox.checked = savedUI.borders;
 		if (this.labelsBox && savedUI?.labels !== undefined) this.labelsBox.checked = savedUI.labels;
+
+		// A share link's params reproduce the shared run: they beat the saved
+		// UI for this load, and normal persistence takes over from there
+		const params = new URLSearchParams(location.search);
+		const urlBorders = params.get('borders');
+		if (urlBorders !== null) this.bordersBox.checked = urlBorders !== '0';
+		const urlLabels = params.get('labels');
+		if (this.labelsBox && urlLabels !== null) this.labelsBox.checked = urlLabels !== '0';
 
 		this.bordersBox.insertAdjacentHTML('afterend', ICONS.borders);
 		this.labelsBox?.insertAdjacentHTML('afterend', ICONS.labels);
@@ -262,7 +281,7 @@ class MapQuiz extends HTMLElement {
 					group.append(option);
 				}
 			}
-			const wanted = savedUI?.selection ?? this.dataset.initial;
+			const wanted = params.get('drill') ?? savedUI?.selection ?? this.dataset.initial;
 			if (wanted && [...picker.options].some((option) => option.value === wanted))
 				picker.value = wanted;
 			picker.addEventListener('change', () => {
@@ -301,13 +320,17 @@ class MapQuiz extends HTMLElement {
 				if (!confirmed) return;
 				if (this.dontAskBox.checked) writeStored(this.def.skipConfirmKey, true);
 				this.runVoided = true;
+				this.runToggled = true;
 				box.checked = wanted;
 				apply();
 				this.persistUI();
 			});
 			return;
 		}
-		if (this.mode === 'quiz') this.runVoided = true;
+		if (this.mode === 'quiz') {
+			this.runVoided = true;
+			this.runToggled = true;
+		}
 		apply();
 		this.persistUI();
 	}
@@ -429,6 +452,43 @@ class MapQuiz extends HTMLElement {
 		}
 	}
 
+	// --- share -------------------------------------------------------------
+
+	// Three lines: quiz + drill, the result with the toggles spelled out, and
+	// a link whose params reproduce the run for the recipient
+	shareText(score: number, elapsed: number) {
+		const drillLabel = this.picker?.selectedOptions[0]?.label;
+		const toggles = [`borders ${this.bordersBox.checked ? 'on' : 'off'}`];
+		if (this.labelsBox) toggles.push(`labels ${this.labelsBox.checked ? 'on' : 'off'}`);
+		const drill = this.def.share.drill(this.dataset.scope, this.picker?.value ?? null);
+		// Keep drill values readable in the link: spaces become +, colons stay
+		const query = drill
+			? [`drill=${encodeURIComponent(drill).replace(/%3A/gi, ':').replace(/%20/g, '+')}`]
+			: [];
+		query.push(`borders=${this.bordersBox.checked ? 1 : 0}`);
+		if (this.labelsBox) query.push(`labels=${this.labelsBox.checked ? 1 : 0}`);
+		return [
+			this.def.share.title + (drillLabel ? ` · ${drillLabel}` : ''),
+			`${score}/${this.total} · ${formatSeconds(elapsed)} · ${toggles.join(', ')}`,
+			`https://guata.me${this.def.share.path}?${query.join('&')}`,
+		].join('\n');
+	}
+
+	shareButton(score: number, elapsed: number) {
+		const text = this.shareText(score, elapsed);
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'share';
+		button.textContent = 'Share';
+		button.addEventListener('click', () => {
+			navigator.clipboard.writeText(text).then(() => {
+				button.textContent = 'Copied!';
+				setTimeout(() => (button.textContent = 'Share'), 2000);
+			});
+		});
+		return button;
+	}
+
 	setScope() {
 		const features = this.def.filter(this.dataset.scope, this.picker?.value ?? null, this.features);
 		this.endQuiz(true);
@@ -529,6 +589,7 @@ class MapQuiz extends HTMLElement {
 		this.runMode = modeFromToggles(this.bordersBox.checked, this.labelsBox?.checked ?? false);
 		if (this.runMode && !this.def.modes.includes(this.runMode)) this.runMode = null;
 		this.runVoided = this.runMode === null;
+		this.runToggled = false;
 		this.runScopeKey = this.scopeKey();
 		this.runStartedAt = Date.now();
 		const byPrompt = new Map<string, Item>();
@@ -578,7 +639,11 @@ class MapQuiz extends HTMLElement {
 			const elapsed = Math.round((Date.now() - this.runStartedAt) / 1000);
 			this.recordRun(score, elapsed);
 			this.endQuiz(true);
-			this.status.textContent = `Final score: ${score}/${this.total} in ${formatSeconds(elapsed)}.`;
+			this.status.innerHTML = '';
+			const message = document.createElement('span');
+			message.textContent = `Final score: ${score}/${this.total} in ${formatSeconds(elapsed)}.`;
+			this.status.append(message);
+			if (!this.runToggled) this.status.append(this.shareButton(score, elapsed));
 			return;
 		}
 		this.current = next;
