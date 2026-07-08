@@ -20,22 +20,51 @@ import { dominicStorageKey, mnemonics as defaultMnemonics } from '../data/mnemon
 // Picker/filter/progress plumbing for quizzes whose only drill is a flat
 // regions table plus an all-of-country row (landkreise, US area codes; the
 // kabupaten quiz stays bespoke for its nested region/province drills).
-// Progress cells are keyed `prefix:region` and `prefix:all`.
+// Progress cells are keyed `prefix:region` and `prefix:all`. Passing `bands`
+// adds a playable tier between the regions and the whole country: the picker
+// groups regions under one optgroup per band with an "All <band>" entry, the
+// progress table mirrors that grouping, and band cells are keyed
+// `prefix:band:<band>` (picker values are `band:<band>`, so region and band
+// keys can never collide).
 const regionDrill = (
 	prefix: string,
 	regions: Record<string, string>,
 	allLabel: string,
 	member: (feature: QuizFeature, region: string) => boolean,
+	bands?: Record<string, { label: string; regions: string[] }>,
 ): Pick<QuizDef, 'pickerEntries' | 'filter' | 'scopeKey' | 'progressRows'> => ({
 	pickerEntries: () => [
-		...Object.entries(regions).map(([value, label]) => ({ value, label })),
+		...(bands
+			? Object.entries(bands).flatMap(([key, band]) => [
+					{ value: `band:${key}`, label: `All ${band.label}`, group: band.label },
+					...band.regions.map((region) => ({
+						value: region,
+						label: regions[region],
+						group: band.label,
+					})),
+				])
+			: Object.entries(regions).map(([value, label]) => ({ value, label }))),
 		{ value: 'all', label: allLabel },
 	],
-	filter: (_scope, selection, features) =>
-		!selection || selection === 'all' ? features : features.filter((f) => member(f, selection)),
+	filter: (_scope, selection, features) => {
+		if (!selection || selection === 'all') return features;
+		const band = selection.startsWith('band:') ? bands?.[selection.slice(5)] : undefined;
+		return band
+			? features.filter((f) => band.regions.some((region) => member(f, region)))
+			: features.filter((f) => member(f, selection));
+	},
 	scopeKey: (_scope, selection) => `${prefix}:${selection ?? 'all'}`,
 	progressRows: () => [
-		...Object.entries(regions).map(([key, label]) => ({ label, key: `${prefix}:${key}` })),
+		...(bands
+			? Object.entries(bands).flatMap(([key, band]): ProgressRow[] => [
+					{ group: band.label },
+					{ label: `All ${band.label}`, key: `${prefix}:band:${key}` },
+					...band.regions.map((region) => ({
+						label: regions[region],
+						key: `${prefix}:${region}`,
+					})),
+				])
+			: Object.entries(regions).map(([key, label]) => ({ label, key: `${prefix}:${key}` }))),
 		{ label: allLabel, key: `${prefix}:all` },
 	],
 });
@@ -207,6 +236,25 @@ const LANDKREIS_REGIONS: Record<string, string> = {
 	suedbayern: 'Südbayern',
 };
 
+// Playable bands across the country between the regions and all-Germany
+// tiers, sized 115/139/123 districts. Sachsen goes north (not Thüringen's
+// band) to keep Central at a manageable size, so North dips around Thüringen
+// rather than being a clean latitude stripe.
+const LANDKREIS_BANDS: Record<string, { label: string; regions: string[] }> = {
+	north: {
+		label: 'North Germany',
+		regions: ['north', 'niedersachsen', 'brandenburg', 'sachsen-anhalt', 'sachsen'],
+	},
+	central: {
+		label: 'Central Germany',
+		regions: ['thueringen', 'nrw', 'hessen', 'rlp-saarland'],
+	},
+	south: {
+		label: 'South Germany',
+		regions: ['bw', 'nordbayern', 'suedbayern'],
+	},
+};
+
 const landkreise: QuizDef = {
 	dataUrl: '/data/landkreise.json',
 	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
@@ -222,6 +270,7 @@ const landkreise: QuizDef = {
 		LANDKREIS_REGIONS,
 		'All Germany',
 		(f, region) => f.properties.region === region,
+		LANDKREIS_BANDS,
 	),
 };
 

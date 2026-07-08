@@ -33,7 +33,7 @@ export const quizPages: QuizPageDef[] = [
 		slug: 'landkreise',
 		title: 'German Landkreise',
 		section: 'subdivisions',
-		stats: '377 districts · by region or all of Germany',
+		stats: '377 districts · by region, north/central/south, or all of Germany',
 		description:
 			'377 districts (cities merged with their parents to avoid redundancy), grouped into ' +
 			"manageable region sizes so you don't have to learn them all at once.",
