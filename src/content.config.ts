@@ -44,7 +44,7 @@ const posts = defineCollection({
 			pubDate: z.coerce.date().optional(),
 		})
 		.refine((post) => post.draft || post.pubDate, {
-			message: 'Published posts need a pubDate — publish drafts with `npm run blog -- publish`.',
+			error: 'Published posts need a pubDate — publish drafts with `npm run blog -- publish`.',
 		}),
 });
 
