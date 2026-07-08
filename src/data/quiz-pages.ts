@@ -7,7 +7,7 @@ export type QuizPageDef = {
 	slug: string;
 	title: string;
 	/** Listing section the quiz appears under */
-	section: 'subdivisions' | 'area-codes';
+	section: 'subdivisions' | 'cities' | 'area-codes';
 	/** Factual one-liner for the listing: prompt count and drill scopes */
 	stats: string;
 	/** Intro's first sentence; doubles as the page's meta description */
@@ -54,6 +54,19 @@ export const quizPages: QuizPageDef[] = [
 		quiz: 'kabupaten',
 		scope: 'combined',
 		pickerLabel: 'Choose an area',
+		labelsToggle: true,
+	},
+	{
+		slug: 'japan-cities',
+		title: 'Japanese Cities',
+		section: 'cities',
+		stats: '284 cities & wards · by region or all of Japan',
+		description:
+			"Every Japanese city with at least 100,000 residents, plus Tokyo's 23 special wards, " +
+			"grouped into regions so you don't have to learn them all at once.",
+		intro: 'Prompts are the kanji names; use the hint to reveal the romanized name.',
+		quiz: 'japan-cities',
+		pickerLabel: 'Choose a region',
 		labelsToggle: true,
 	},
 	{

@@ -37,6 +37,8 @@ export type QuizDef = {
 	 * properties (e.g. a romanization) rather than derived from the prompt.
 	 */
 	hint?(prompt: string, features: QuizFeature[]): string;
+	/** Append the hint to tooltips while browsing the map before a quiz run */
+	tipHint?: boolean;
 	/** Whether the Labels tile toggle renders; without it tiles stay labeled */
 	labelsToggle: boolean;
 	/** Toggle combinations tracked in the progress dialog, in column order */
@@ -514,7 +516,11 @@ class MapQuiz extends HTMLElement {
 			this.nameTip.hidden = true;
 			return;
 		}
-		this.showTip(event, this.def.label(feature));
+		const hint =
+			this.def.tipHint && this.def.hint
+				? ` · ${this.def.hint(this.def.prompts(feature)[0], [feature])}`
+				: '';
+		this.showTip(event, this.def.label(feature) + hint);
 	}
 
 	// --- quiz ------------------------------------------------------------

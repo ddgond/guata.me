@@ -58,6 +58,23 @@ index-based EXCLUDE/INCLUDE/PROMOTE sets to `GID_2` codes and re-deriving the
 street-view coverage curation that `isGeo` encodes. Archive this file if
 emily.bz ever looks shaky.
 
+### Japanese cities (`japan-cities-data.mjs`)
+
+Built from 国土数値情報 N03 (MLIT's official administrative boundaries),
+fetched per-prefecture and pinned to the N03-20210101 edition so the
+boundaries match the October 2020 census the city selection is frozen from.
+GADM was evaluated first and rejected: `gadm41_JPN_2.json` (which
+`emily.bz/geojson/subdivision/JP_2.json` mirrors **byte-identically**)
+predates the 2010–2011 municipal mergers (Nagahama at 21% of its real area,
+Kuki 24%, Inzai 37%, Tochigi 38%, …) and modern coastal reclamation (Urayasu
+is a 1.6 km² sliver of its real 17.3 km²), and its `CC_2`/`NL_NAME_2` fields
+are unreliable (no JIS codes; wrong kanji for Kushiro and Misato). N03
+carries the JIS municipality code in `N03_007`, which joins the census table
+exactly. The census population/name source is e-Stat's
+都道府県・市区町村別の主な結果 table
+(`e-stat.go.jp/stat-search/file-download?statInfId=000032143614&fileKind=0`),
+frozen into the script.
+
 ## Sources for future quizzes
 
 - **Subdivisions**: GADM 4.1 directly

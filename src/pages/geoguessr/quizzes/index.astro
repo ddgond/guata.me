@@ -1,7 +1,7 @@
 ---
 // Listing of the standalone find-on-map quiz pages (quiz-pages.ts), grouped
-// into subdivision and area-code quizzes and styled after the tools list on
-// /geoguessr.
+// into subdivision, city, and area-code quizzes and styled after the tools
+// list on /geoguessr.
 
 import Layout from '../../../layouts/Layout.astro';
 import { quizPages } from '../../../data/quiz-pages';
@@ -14,6 +14,11 @@ const sections = [
 			'Quizzes for locating subdivisions within a country. Read ' +
 			'<a href="/blog/memorizing-kabupaten">this post</a> (originally written for kabupaten) ' +
 			'to learn my recommended approach for studying these.',
+	},
+	{
+		key: 'cities',
+		heading: 'Cities',
+		intro: 'Quizzes for locating cities within a country.',
 	},
 	{
 		key: 'area-codes',

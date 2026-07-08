@@ -1,9 +1,10 @@
 // Quiz definitions for the <map-quiz> element: the kabupaten quiz
 // (/data/kabupaten.json, regenerate with scripts/kabupaten-data.mjs), the
 // Japan/Brazil/US area-code quizzes (/data/area-codes-*.json, regenerate with
-// scripts/area-code-data.mjs), and the German Landkreise quiz
-// (/data/landkreise.json, regenerate with scripts/landkreis-data.mjs).
-// Importing this module registers them all.
+// scripts/area-code-data.mjs), the German Landkreise quiz
+// (/data/landkreise.json, regenerate with scripts/landkreis-data.mjs), and
+// the Japanese cities quiz (/data/japan-cities.json, regenerate with
+// scripts/japan-cities-data.mjs). Importing this module registers them all.
 
 import {
 	registerQuizzes,
@@ -221,6 +222,40 @@ const landkreise: QuizDef = {
 	...regionDrill('de', LANDKREIS_REGIONS, 'All Germany', (f, region) => f.properties.region === region),
 };
 
+// --- Japanese cities -----------------------------------------------------
+
+// Labels for the region keys scripts/japan-cities-data.mjs writes into the
+// data: the classic regions with Tohoku folded into Hokkaido, Kanto split
+// into North/Tokyo/South, Shikoku folded into Chugoku, and Okinawa into
+// Kyushu, so every drill lands between 19 and 54 cities, swept north to south
+const JAPAN_CITY_REGIONS: Record<string, string> = {
+	'hokkaido-tohoku': 'Hokkaido & Tohoku',
+	'kita-kanto': 'North Kanto',
+	tokyo: 'Tokyo',
+	'minami-kanto': 'South Kanto',
+	chubu: 'Chubu',
+	kansai: 'Kansai',
+	'chugoku-shikoku': 'Chugoku & Shikoku',
+	'kyushu-okinawa': 'Kyushu & Okinawa',
+};
+
+const japanCities: QuizDef = {
+	dataUrl: '/data/japan-cities.json',
+	attribution:
+		'Imagery © Google · Boundaries © <a href="https://nlftp.mlit.go.jp/ksj/">MLIT Japan</a>',
+	label: (f) => f.properties.name,
+	// Prompts are the kanji names; the hint reveals the census romanization
+	prompts: (f) => [f.properties.name],
+	hint: (_prompt, features) => features[0].properties.romaji,
+	tipHint: true,
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'japan-city-progress',
+	skipConfirmKey: 'japan-city-skip-toggle-confirm',
+	uiKey: () => 'japan-city-ui',
+	...regionDrill('jp', JAPAN_CITY_REGIONS, 'All Japan', (f, region) => f.properties.region === region),
+};
+
 // --- area codes ----------------------------------------------------------
 
 // Mirrors the Dominic builder's load(): the reader's saved list wins when
@@ -310,6 +345,7 @@ const areaCodes = (country: string, countryLabel: string, overrides: Partial<Qui
 registerQuizzes({
 	kabupaten,
 	landkreise,
+	'japan-cities': japanCities,
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
 	'area-us': areaCodes('us', 'United States', {
