@@ -1,6 +1,6 @@
 // Generates a GeoGuessr practice map for every playable drill of every map
 // quiz — each quiz's regions, any finer or coarser tiers it drills (the
-// kabupaten quiz's provinces, the Landkreise quiz's North/Central/South
+// kabupaten quiz's provinces, the Landkreise and Japanese cities quizzes'
 // bands), and the all-country drill — with Vali
 // (https://github.com/slashP/Vali). Each quiz boundary file in public/data
 // becomes a set of Vali geometry filters — one map per drill, containing
@@ -99,6 +99,11 @@ const LANDKREIS_BANDS = {
 	'band-central': ['thueringen', 'nrw', 'hessen', 'rlp-saarland'],
 	'band-south': ['bw', 'nordbayern', 'suedbayern'],
 };
+const JAPAN_CITY_BANDS = {
+	'band-east': ['hokkaido-tohoku', 'kita-kanto', 'tokyo'],
+	'band-central': ['minami-kanto', 'chubu'],
+	'band-west': ['kansai', 'chugoku-shikoku', 'kyushu-okinawa'],
+};
 const invert = (groups) =>
 	Object.fromEntries(
 		Object.entries(groups).flatMap(([region, members]) => members.map((m) => [m, region])),
@@ -106,6 +111,7 @@ const invert = (groups) =>
 const KABUPATEN_REGION_BY_PROVINCE = invert(KABUPATEN_REGIONS);
 const US_REGION_BY_STATE = invert(US_REGIONS);
 const LANDKREIS_BAND_BY_REGION = invert(LANDKREIS_BANDS);
+const JAPAN_CITY_BAND_BY_REGION = invert(JAPAN_CITY_BANDS);
 
 // File-safe map name for drills keyed by a display name ("DKI Jakarta")
 const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -118,7 +124,11 @@ const QUIZZES = {
 		country: 'DE',
 		groupings: [(p) => p.region, (p) => LANDKREIS_BAND_BY_REGION[p.region]],
 	},
-	'japan-cities': { data: 'japan-cities.json', country: 'JP', groupings: [(p) => p.region] },
+	'japan-cities': {
+		data: 'japan-cities.json',
+		country: 'JP',
+		groupings: [(p) => p.region, (p) => JAPAN_CITY_BAND_BY_REGION[p.region]],
+	},
 	kabupaten: {
 		data: 'kabupaten.json',
 		country: 'ID',

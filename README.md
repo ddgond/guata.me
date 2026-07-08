@@ -24,7 +24,8 @@ rendering wrong. Higher `order` values appear first on the page.
 
 `npm run vali-maps [-- <quiz ...> --force]` generates a GeoGuessr map for
 every playable drill of every map quiz — regions, the kabupaten quiz's
-provinces, the Landkreise quiz's bands, and each all-country drill — with
+provinces, the Landkreise and Japanese cities bands, and each all-country
+drill — with
 [Vali](https://github.com/slashP/Vali), using the quiz boundary files in
 `public/data/` as geometry filters. Vali comes from `nix-shell` (packaged in
 `nix/vali.nix`) and downloads its per-country location pool to

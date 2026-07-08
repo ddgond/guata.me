@@ -291,6 +291,25 @@ const JAPAN_CITY_REGIONS: Record<string, string> = {
 	'kyushu-okinawa': 'Kyushu & Okinawa',
 };
 
+// Playable bands along the archipelago between the regions and all-Japan
+// tiers, sized 85/96/103 cities. South Kanto rides with Chubu (not the rest
+// of Kanto) to keep the bands near-even, so East ends at Tokyo rather than
+// at the usual East/West Japan line.
+const JAPAN_CITY_BANDS: Record<string, { label: string; regions: string[] }> = {
+	east: {
+		label: 'East Japan',
+		regions: ['hokkaido-tohoku', 'kita-kanto', 'tokyo'],
+	},
+	central: {
+		label: 'Central Japan',
+		regions: ['minami-kanto', 'chubu'],
+	},
+	west: {
+		label: 'West Japan',
+		regions: ['kansai', 'chugoku-shikoku', 'kyushu-okinawa'],
+	},
+};
+
 const japanCities: QuizDef = {
 	dataUrl: '/data/japan-cities.json',
 	attribution:
@@ -310,6 +329,7 @@ const japanCities: QuizDef = {
 		JAPAN_CITY_REGIONS,
 		'All Japan',
 		(f, region) => f.properties.region === region,
+		JAPAN_CITY_BANDS,
 	),
 };
 

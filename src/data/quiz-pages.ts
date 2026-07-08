@@ -60,7 +60,7 @@ export const quizPages: QuizPageDef[] = [
 		slug: 'japan-cities',
 		title: 'Japanese Cities',
 		section: 'cities',
-		stats: '284 cities & wards · by region or all of Japan',
+		stats: '284 cities & wards · by region, east/central/west, or all of Japan',
 		description:
 			"Every Japanese city with at least 100,000 residents, plus Tokyo's 23 special wards, " +
 			"grouped into regions so you don't have to learn them all at once.",
