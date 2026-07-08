@@ -26,10 +26,13 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { dataPath } from './lib/quiz-data.mjs';
 
-// Every map aims for the same size: plenty of rounds before locations repeat,
-// with a min distance low enough for the small drills (Tokyo, city-sized
-// shapes) to still reach it
-const LOCATION_GOAL = 5000;
+// Every map aims for the same size, on the large side of Vali's own examples
+// (12k–80k for single countries): locations spread area-proportionally, so a
+// big goal is what keeps the smallest shapes (city-Kreise, Tokyo wards) from
+// rounding down to zero locations in the all-country maps. Small drills just
+// saturate their pool and fall short of the goal, which is fine. The min
+// distance is low for the same reason.
+const LOCATION_GOAL = 50000;
 const MIN_MIN_DISTANCE = 25;
 
 // Region groupings for the two quizzes whose data files don't carry a region
