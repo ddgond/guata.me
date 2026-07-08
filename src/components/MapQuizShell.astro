@@ -24,7 +24,16 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 
 <map-quiz data-quiz={quiz} data-scope={scope} data-initial={initial}>
 	<div class="bar top">
-		{pickerLabel && <select class="picker" aria-label={pickerLabel} />}
+		{
+			/* The {null} child keeps Prettier from collapsing this to a
+			   self-closing <select />, which trips an @astrojs/compiler bug that
+			   scrambles the closing tags of everything after it */
+			pickerLabel && (
+				<select class="picker" aria-label={pickerLabel}>
+					{null}
+				</select>
+			)
+		}
 		<button class="start" disabled>Start Quiz</button>
 	</div>
 	<div class="bar status" aria-live="polite">loading map…</div>
