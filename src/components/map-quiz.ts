@@ -48,7 +48,11 @@ export type QuizDef = {
 	uiKey(scope: string | undefined): string;
 	/** Options for the scope picker; omit for quizzes without one */
 	pickerEntries?(scope: string | undefined, features: QuizFeature[]): PickerEntry[];
-	filter(scope: string | undefined, selection: string | null, features: QuizFeature[]): QuizFeature[];
+	filter(
+		scope: string | undefined,
+		selection: string | null,
+		features: QuizFeature[],
+	): QuizFeature[];
 	scopeKey(scope: string | undefined, selection: string | null): string;
 	progressRows(scope: string | undefined, features: QuizFeature[]): ProgressRow[];
 	/** Explicit initial view for scopes whose natural bounds are unhelpful */
@@ -92,7 +96,7 @@ const modeFromToggles = (borders: boolean, labels: boolean): ModeKey | null =>
 const formatSeconds = (seconds: number) =>
 	seconds >= 3600 ? '>1h' : `${Math.floor(seconds / 60)}m${String(seconds % 60).padStart(2, '0')}s`;
 
-const readStored = <T,>(key: string): T | null => {
+const readStored = <T>(key: string): T | null => {
 	try {
 		return JSON.parse(localStorage.getItem(key) ?? 'null');
 	} catch {
@@ -119,7 +123,7 @@ const loadData = (url: string) => {
 	return promise;
 };
 
-const shuffle = <T,>(items: T[]) => {
+const shuffle = <T>(items: T[]) => {
 	for (let i = items.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1));
 		[items[i], items[j]] = [items[j], items[i]];
@@ -416,8 +420,7 @@ class MapQuiz extends HTMLElement {
 				if (record.best >= record.total) {
 					cell.className = 'done';
 					// Pre-timing perfect records keep the plain checkmark
-					cell.textContent =
-						record.seconds === undefined ? '✓' : formatSeconds(record.seconds);
+					cell.textContent = record.seconds === undefined ? '✓' : formatSeconds(record.seconds);
 				} else {
 					cell.className = 'tried';
 					cell.textContent = `${Math.floor((record.best / record.total) * 100)}%`;
@@ -427,11 +430,7 @@ class MapQuiz extends HTMLElement {
 	}
 
 	setScope() {
-		const features = this.def.filter(
-			this.dataset.scope,
-			this.picker?.value ?? null,
-			this.features,
-		);
+		const features = this.def.filter(this.dataset.scope, this.picker?.value ?? null, this.features);
 		this.endQuiz(true);
 		this.review.clear();
 		this.geoLayer?.remove();
@@ -620,8 +619,7 @@ class MapQuiz extends HTMLElement {
 			if (this.isRevealed(feature)) {
 				const targets = this.revealed!;
 				this.revealed = null;
-				for (const target of targets.features)
-					this.flash(this.layerFor(target), target, 'gold');
+				for (const target of targets.features) this.flash(this.layerFor(target), target, 'gold');
 				this.queue.push(this.current);
 				this.nextQuestion();
 			} else {
@@ -659,8 +657,7 @@ class MapQuiz extends HTMLElement {
 			skip.addEventListener('click', () => {
 				const item = this.current!;
 				this.revealed = null;
-				for (const target of item.features)
-					this.layerFor(target).setStyle(this.styleFor(target));
+				for (const target of item.features) this.layerFor(target).setStyle(this.styleFor(target));
 				this.queue.push(item);
 				this.nextQuestion();
 			});

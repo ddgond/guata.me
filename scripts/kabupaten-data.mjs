@@ -21,8 +21,8 @@ const OUTPUT = dataPath('kabupaten.json');
 // same-named kabupaten) and remote island groups; includes force in a few
 // shapes whose isGeo flag lags their GeoGuessr coverage.
 const EXCLUDE = new Set([
-	196, 55, 195, 197, 90, 184, 203, 201, 204, 202, 205, 228, 272, 269, 225, 271, 224, 226, 231,
-	227, 152, 151, 147, 68, 262, 257, 258, 261, 260, 259, 67, 313, 440, 459,
+	196, 55, 195, 197, 90, 184, 203, 201, 204, 202, 205, 228, 272, 269, 225, 271, 224, 226, 231, 227,
+	152, 151, 147, 68, 262, 257, 258, 261, 260, 259, 67, 313, 440, 459,
 ]);
 const INCLUDE = new Set([396, 7, 3, 148, 149, 12]);
 
@@ -87,7 +87,9 @@ source.features.forEach((feature, i) => {
 	included.push(feature);
 });
 if (included.length !== EXPECTED_COUNT) {
-	throw new Error(`Expected ${EXPECTED_COUNT} kabupaten, got ${included.length} — source data changed?`);
+	throw new Error(
+		`Expected ${EXPECTED_COUNT} kabupaten, got ${included.length} — source data changed?`,
+	);
 }
 
 // Bintan administratively includes the Tambelan islands ~350 km east of the

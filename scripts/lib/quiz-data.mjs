@@ -45,11 +45,22 @@ export function simplifyAndWrite({ features, output, dissolve, simplify, expecte
 			'mapshaper',
 			tmp,
 			...(dissolve
-				? ['-dissolve', `fields=${dissolve.key}`, `copy-fields=${dissolve.copyFields.join(',')}`,
-					'-each', `delete ${dissolve.key}`]
+				? [
+						'-dissolve',
+						`fields=${dissolve.key}`,
+						`copy-fields=${dissolve.copyFields.join(',')}`,
+						'-each',
+						`delete ${dissolve.key}`,
+					]
 				: []),
-			'-simplify', 'weighted', simplify, 'keep-shapes',
-			'-o', 'precision=0.001', 'format=geojson', output,
+			'-simplify',
+			'weighted',
+			simplify,
+			'keep-shapes',
+			'-o',
+			'precision=0.001',
+			'format=geojson',
+			output,
 		],
 		{ stdio: 'inherit' },
 	);

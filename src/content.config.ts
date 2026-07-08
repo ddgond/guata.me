@@ -19,7 +19,7 @@ const projects = defineCollection({
 						z.object({ type: z.literal('image'), src: image() }),
 						z.object({ type: z.literal('video'), src: z.string() }),
 						z.object({ type: z.literal('youtube'), src: z.string() }),
-					])
+					]),
 				)
 				.default([]),
 			links: z.array(z.object({ href: z.string(), text: z.string() })).default([]),

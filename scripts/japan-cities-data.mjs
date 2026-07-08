@@ -324,14 +324,23 @@ const CITIES = [
 
 // Drill groups by prefecture (leading two code digits), swept north to south
 const REGIONS = {
-	'hokkaido-tohoku': { label: 'Hokkaido & Tohoku', prefectures: ['01', '02', '03', '04', '05', '06', '07'] },
+	'hokkaido-tohoku': {
+		label: 'Hokkaido & Tohoku',
+		prefectures: ['01', '02', '03', '04', '05', '06', '07'],
+	},
 	'kita-kanto': { label: 'North Kanto', prefectures: ['08', '09', '10'] },
 	tokyo: { label: 'Tokyo', prefectures: ['13'] },
 	'minami-kanto': { label: 'South Kanto', prefectures: ['11', '12', '14'] },
 	chubu: { label: 'Chubu', prefectures: ['15', '16', '17', '18', '19', '20', '21', '22', '23'] },
 	kansai: { label: 'Kansai', prefectures: ['24', '25', '26', '27', '28', '29', '30'] },
-	'chugoku-shikoku': { label: 'Chugoku & Shikoku', prefectures: ['31', '32', '33', '34', '35', '36', '37', '38', '39'] },
-	'kyushu-okinawa': { label: 'Kyushu & Okinawa', prefectures: ['40', '41', '42', '43', '44', '45', '46', '47'] },
+	'chugoku-shikoku': {
+		label: 'Chugoku & Shikoku',
+		prefectures: ['31', '32', '33', '34', '35', '36', '37', '38', '39'],
+	},
+	'kyushu-okinawa': {
+		label: 'Kyushu & Okinawa',
+		prefectures: ['40', '41', '42', '43', '44', '45', '46', '47'],
+	},
 };
 const regionByPrefecture = new Map(
 	Object.entries(REGIONS).flatMap(([key, { prefectures }]) => prefectures.map((p) => [p, key])),
@@ -353,11 +362,15 @@ const EXPECTED_COUNT = Object.values(EXPECTED_REGIONS).reduce((a, b) => a + b, 0
 
 // The frozen table should already satisfy the selection rule
 const entries = CITIES.map(([code, kanji, romaji, pop]) => ({ code, kanji, romaji, pop }));
-if (entries.length !== EXPECTED_COUNT) throw new Error(`Expected ${EXPECTED_COUNT} entries, got ${entries.length}`);
-if (new Set(entries.map((e) => e.code)).size !== entries.length) throw new Error('JIS codes are not unique');
+if (entries.length !== EXPECTED_COUNT)
+	throw new Error(`Expected ${EXPECTED_COUNT} entries, got ${entries.length}`);
+if (new Set(entries.map((e) => e.code)).size !== entries.length)
+	throw new Error('JIS codes are not unique');
 for (const { code, kanji, pop } of entries) {
-	if (pop < 100_000 && !code.startsWith('131')) throw new Error(`${kanji} is below the 100k cutoff`);
-	if (!regionByPrefecture.has(code.slice(0, 2))) throw new Error(`${kanji}: prefecture ${code.slice(0, 2)} has no region`);
+	if (pop < 100_000 && !code.startsWith('131'))
+		throw new Error(`${kanji} is below the 100k cutoff`);
+	if (!regionByPrefecture.has(code.slice(0, 2)))
+		throw new Error(`${kanji}: prefecture ${code.slice(0, 2)} has no region`);
 }
 
 const byCode = new Map(entries.map((e) => [e.code, e]));
@@ -373,7 +386,9 @@ const fetchPrefecture = async (prefecture) => {
 		console.log(`Fetching ${SOURCE_DIR}/${name} ...`);
 		writeFileSync(file, Buffer.from(await (await fetch(`${SOURCE_DIR}/${name}`)).arrayBuffer()));
 	}
-	return JSON.parse(execFileSync('unzip', ['-p', file, '*.geojson'], { maxBuffer: 1024 * 1024 * 1024 }));
+	return JSON.parse(
+		execFileSync('unzip', ['-p', file, '*.geojson'], { maxBuffer: 1024 * 1024 * 1024 }),
+	);
 };
 
 const features = [];
@@ -401,7 +416,8 @@ for (const prefecture of [...new Set(entries.map((e) => e.code.slice(0, 2)))]) {
 }
 
 const missing = entries.filter((e) => !matched.has(e.code));
-if (missing.length) throw new Error(`No boundary matched: ${missing.map((e) => `${e.code} ${e.kanji}`).join(', ')}`);
+if (missing.length)
+	throw new Error(`No boundary matched: ${missing.map((e) => `${e.code} ${e.kanji}`).join(', ')}`);
 
 const regionCounts = {};
 for (const code of matched) regionCounts[regionByPrefecture.get(code.slice(0, 2))] ??= 0;

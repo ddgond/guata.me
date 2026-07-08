@@ -10,7 +10,12 @@ interface Props {
 	description?: string;
 }
 
-const { title, active, showNavLogo = true, description = "Dan Dangond's personal site." } = Astro.props;
+const {
+	title,
+	active,
+	showNavLogo = true,
+	description = "Dan Dangond's personal site.",
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -83,8 +88,7 @@ const { title, active, showNavLogo = true, description = "Dan Dangond's personal
 		margin: 2.5rem 0 1rem;
 		padding-bottom: 0.4rem;
 		width: fit-content;
-		background:
-			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5 C 20 2, 40 7, 60 4 S 100 3, 118 5' fill='none' stroke='%237dd3fc' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E")
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5 C 20 2, 40 7, 60 4 S 100 3, 118 5' fill='none' stroke='%237dd3fc' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E")
 			bottom left / 100% 8px no-repeat;
 	}
 	a {
@@ -105,8 +109,7 @@ const { title, active, showNavLogo = true, description = "Dan Dangond's personal
 	.divider {
 		margin: 2.5rem auto;
 		height: 8px;
-		background:
-			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 8' preserveAspectRatio='none'%3E%3Cpath d='M2 4 C 50 2, 100 7, 150 4 S 250 2, 298 5' fill='none' stroke='%23d9d4c7' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 8' preserveAspectRatio='none'%3E%3Cpath d='M2 4 C 50 2, 100 7, 150 4 S 250 2, 298 5' fill='none' stroke='%23d9d4c7' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
 			center / 100% 8px no-repeat;
 	}
 	/* Visible marker for sections awaiting Dan's copy */

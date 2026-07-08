@@ -1,9 +1,11 @@
 # Personal Homepage
+
 Build with `npm run build`
 
 Develop with live-updates with `npm run dev`
 
 ## Adding a project
+
 Scaffold a new entry with `npm run new-project -- "Project Title" <games|dev|3d>`
 (or run it with no arguments to be prompted). This creates a markdown file under
 `src/content/projects/<category>/` with every field stubbed out and commented —
@@ -13,11 +15,13 @@ description as the markdown body. Frontmatter is validated against the schema in
 rendering wrong. Higher `order` values appear first on the page.
 
 ## Logo & favicon
+
 `scripts/generate-logo.py [logo|favicon|all]` regenerates
 `src/images/dan-dangond-logo.png` (needs Pillow) and `public/favicon.svg`
 (needs fontTools).
 
 ## GeoGuessr maps for the quizzes
+
 `npm run vali-maps [-- <quiz ...> --force]` generates a GeoGuessr map for
 every drill region of every map quiz (plus each all-country drill) with
 [Vali](https://github.com/slashP/Vali), using the quiz boundary files in

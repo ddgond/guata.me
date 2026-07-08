@@ -22,10 +22,10 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 >
 	<h2 class="section">Dominic System Builder</h2>
 	<p>
-		Use this tool to build your own set of mnemonics for use with the Dominic System. For details
-		on how to set up and use the Dominic System, read <a href="/blog/memorizing-area-codes">On
-			Memorizing Area Codes</a>. All changes made here auto-save and will be reloaded when you
-		return.
+		Use this tool to build your own set of mnemonics for use with the Dominic System. For details on
+		how to set up and use the Dominic System, read <a href="/blog/memorizing-area-codes"
+			>On Memorizing Area Codes</a
+		>. All changes made here auto-save and will be reloaded when you return.
 	</p>
 
 	<DominicQuiz hide="#dominic-editor" />
@@ -118,7 +118,7 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 		});
 	});
 	const letterInputs = Array.from(
-		document.querySelectorAll<HTMLInputElement>('#dominic-mapping input')
+		document.querySelectorAll<HTMLInputElement>('#dominic-mapping input'),
 	);
 	const status = document.getElementById('dominic-status')!;
 	const lookupInput = document.getElementById('dominic-lookup') as HTMLInputElement;
@@ -210,10 +210,11 @@ const exampleResult = `319 → 31-19 → ${byNumber.get('31')!.person} ${byNumbe
 			const match = line.match(/^(\d{2})\s*-\s*(.*)$/);
 			if (!match)
 				throw new Error(
-					`Line ${i + 1} should look like "31 - Captain America / throwing a shield"`
+					`Line ${i + 1} should look like "31 - Captain America / throwing a shield"`,
 				);
 			const slash = match[2].indexOf('/');
-			if (slash === -1) throw new Error(`Line ${i + 1} is missing the "/" between person and action`);
+			if (slash === -1)
+				throw new Error(`Line ${i + 1} is missing the "/" between person and action`);
 			entries.set(match[1], {
 				person: match[2].slice(0, slash).trim(),
 				action: match[2].slice(slash + 1).trim(),

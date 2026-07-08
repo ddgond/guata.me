@@ -54,8 +54,7 @@ for (const [country, { source, quiz, expectedShapes, expectedCodes }] of Object.
 	// Codes per feature index, in question-list order
 	const codesByFeature = new Map();
 	if (quiz) {
-		const questions = (await fetchJson(`https://helloquiz.app/api/quiz/${quiz}/question`))
-			.message;
+		const questions = (await fetchJson(`https://helloquiz.app/api/quiz/${quiz}/question`)).message;
 		for (const question of questions) {
 			for (const answer of [question.answer].flat()) {
 				const index = Number(answer);

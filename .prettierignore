@@ -1,0 +1,5 @@
+# generated data files
+public/data/
+
+# lockfile
+package-lock.json

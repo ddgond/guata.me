@@ -20,7 +20,7 @@ const posts = (
 ).sort(
 	(a, b) =>
 		Number(b.data.draft) - Number(a.data.draft) ||
-		(b.data.pubDate?.getTime() ?? 0) - (a.data.pubDate?.getTime() ?? 0)
+		(b.data.pubDate?.getTime() ?? 0) - (a.data.pubDate?.getTime() ?? 0),
 );
 ---
 

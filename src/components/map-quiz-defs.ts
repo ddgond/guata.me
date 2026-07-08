@@ -32,9 +32,7 @@ const regionDrill = (
 		{ value: 'all', label: allLabel },
 	],
 	filter: (_scope, selection, features) =>
-		!selection || selection === 'all'
-			? features
-			: features.filter((f) => member(f, selection)),
+		!selection || selection === 'all' ? features : features.filter((f) => member(f, selection)),
 	scopeKey: (_scope, selection) => `${prefix}:${selection ?? 'all'}`,
 	progressRows: () => [
 		...Object.entries(regions).map(([key, label]) => ({ label, key: `${prefix}:${key}` })),
@@ -219,7 +217,12 @@ const landkreise: QuizDef = {
 	progressKey: 'landkreis-progress',
 	skipConfirmKey: 'landkreis-skip-toggle-confirm',
 	uiKey: () => 'landkreis-ui',
-	...regionDrill('de', LANDKREIS_REGIONS, 'All Germany', (f, region) => f.properties.region === region),
+	...regionDrill(
+		'de',
+		LANDKREIS_REGIONS,
+		'All Germany',
+		(f, region) => f.properties.region === region,
+	),
 };
 
 // --- Japanese cities -----------------------------------------------------
@@ -253,7 +256,12 @@ const japanCities: QuizDef = {
 	progressKey: 'japan-city-progress',
 	skipConfirmKey: 'japan-city-skip-toggle-confirm',
 	uiKey: () => 'japan-city-ui',
-	...regionDrill('jp', JAPAN_CITY_REGIONS, 'All Japan', (f, region) => f.properties.region === region),
+	...regionDrill(
+		'jp',
+		JAPAN_CITY_REGIONS,
+		'All Japan',
+		(f, region) => f.properties.region === region,
+	),
 };
 
 // --- area codes ----------------------------------------------------------
@@ -323,7 +331,11 @@ const LOWER_48: BoundsLiteral = [
 	[49.6, -66.8],
 ];
 
-const areaCodes = (country: string, countryLabel: string, overrides: Partial<QuizDef>): QuizDef => ({
+const areaCodes = (
+	country: string,
+	countryLabel: string,
+	overrides: Partial<QuizDef>,
+): QuizDef => ({
 	dataUrl: `/data/area-codes-${country}.json`,
 	attribution:
 		'Imagery © Google · Boundaries via <a href="https://super-duper.fr/geojson/">super-duper</a>',

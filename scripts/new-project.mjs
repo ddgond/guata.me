@@ -9,7 +9,13 @@ import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
 
 const CATEGORIES = ['games', 'dev', '3d'];
-const CONTENT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'content', 'projects');
+const CONTENT_DIR = join(
+	dirname(fileURLToPath(import.meta.url)),
+	'..',
+	'src',
+	'content',
+	'projects',
+);
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
@@ -54,7 +60,7 @@ const maxOrder = CATEGORIES.flatMap((dir) => {
 			.match(/^categories:\s*\[([^\]]*)\]/m)?.[1]
 			.split(',')
 			.map((c) => c.trim())
-			.includes(category)
+			.includes(category),
 	)
 	.map((src) => Number(src.match(/^order:\s*(\d+)/m)?.[1] ?? 0))
 	.reduce((a, b) => Math.max(a, b), 0);

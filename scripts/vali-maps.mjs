@@ -40,11 +40,43 @@ const MIN_MIN_DISTANCE = 25;
 // Copied from the drill tables in src/components/map-quiz-defs.ts — keep in
 // sync; a feature that maps to no region fails the run below.
 const KABUPATEN_REGIONS = {
-	java: ['Banten', 'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'Daerah Istimewa Yogyakarta', 'Jawa Timur'],
+	java: [
+		'Banten',
+		'DKI Jakarta',
+		'Jawa Barat',
+		'Jawa Tengah',
+		'Daerah Istimewa Yogyakarta',
+		'Jawa Timur',
+	],
 	nusas: ['Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur'],
-	sulawesi: ['Sulawesi Tenggara', 'Sulawesi Selatan', 'Sulawesi Barat', 'Sulawesi Tengah', 'Gorontalo', 'Sulawesi Utara', 'Maluku Utara'],
-	kalimantan: ['Kalimantan Utara', 'Kalimantan Timur', 'Kalimantan Selatan', 'Kalimantan Tengah', 'Kalimantan Barat'],
-	sumatra: ['Lampung', 'Kepulauan Bangka Belitung', 'Sumatera Selatan', 'Bengkulu', 'Jambi', 'Riau', 'Kepulauan Riau', 'Sumatera Barat', 'Sumatera Utara', 'Aceh'],
+	sulawesi: [
+		'Sulawesi Tenggara',
+		'Sulawesi Selatan',
+		'Sulawesi Barat',
+		'Sulawesi Tengah',
+		'Gorontalo',
+		'Sulawesi Utara',
+		'Maluku Utara',
+	],
+	kalimantan: [
+		'Kalimantan Utara',
+		'Kalimantan Timur',
+		'Kalimantan Selatan',
+		'Kalimantan Tengah',
+		'Kalimantan Barat',
+	],
+	sumatra: [
+		'Lampung',
+		'Kepulauan Bangka Belitung',
+		'Sumatera Selatan',
+		'Bengkulu',
+		'Jambi',
+		'Riau',
+		'Kepulauan Riau',
+		'Sumatera Barat',
+		'Sumatera Utara',
+		'Aceh',
+	],
 };
 const US_REGIONS = {
 	newEngland: ['ME', 'NH', 'VT', 'MA', 'RI', 'CT'],
@@ -58,7 +90,9 @@ const US_REGIONS = {
 	pacific: ['WA', 'OR', 'CA', 'AK', 'HI'],
 };
 const invert = (groups) =>
-	Object.fromEntries(Object.entries(groups).flatMap(([region, members]) => members.map((m) => [m, region])));
+	Object.fromEntries(
+		Object.entries(groups).flatMap(([region, members]) => members.map((m) => [m, region])),
+	);
 const KABUPATEN_REGION_BY_PROVINCE = invert(KABUPATEN_REGIONS);
 const US_REGION_BY_STATE = invert(US_REGIONS);
 
@@ -67,8 +101,16 @@ const US_REGION_BY_STATE = invert(US_REGIONS);
 const QUIZZES = {
 	landkreise: { data: 'landkreise.json', country: 'DE', regionOf: (p) => p.region },
 	'japan-cities': { data: 'japan-cities.json', country: 'JP', regionOf: (p) => p.region },
-	kabupaten: { data: 'kabupaten.json', country: 'ID', regionOf: (p) => KABUPATEN_REGION_BY_PROVINCE[p.province] },
-	'area-us': { data: 'area-codes-us.json', country: 'US', regionOf: (p) => US_REGION_BY_STATE[p.state] },
+	kabupaten: {
+		data: 'kabupaten.json',
+		country: 'ID',
+		regionOf: (p) => KABUPATEN_REGION_BY_PROVINCE[p.province],
+	},
+	'area-us': {
+		data: 'area-codes-us.json',
+		country: 'US',
+		regionOf: (p) => US_REGION_BY_STATE[p.state],
+	},
 	'area-jp': { data: 'area-codes-jp.json', country: 'JP' },
 	'area-br': { data: 'area-codes-br.json', country: 'BR' },
 };
@@ -168,10 +210,16 @@ for (const quiz of quizzes) {
 		// geometry) to keep the hash blind to prop-only changes
 		const geometry = {
 			type: 'FeatureCollection',
-			features: regionFeatures.map((f) => ({ type: 'Feature', properties: {}, geometry: f.geometry })),
+			features: regionFeatures.map((f) => ({
+				type: 'Feature',
+				properties: {},
+				geometry: f.geometry,
+			})),
 		};
 
-		const hash = createHash('sha256').update(JSON.stringify([definition, geometry])).digest('hex');
+		const hash = createHash('sha256')
+			.update(JSON.stringify([definition, geometry]))
+			.digest('hex');
 		const hashFile = join(outDir, `${region}.hash`);
 		const locationsFile = join(outDir, `${region}-locations.json`);
 		if (
@@ -195,7 +243,9 @@ for (const quiz of quizzes) {
 		vali(['generate', '--file', `${region}.json`], outDir);
 
 		if (!existsSync(locationsFile)) {
-			throw new Error(`${quiz}/${region}: vali wrote no ${region}-locations.json — see its output above`);
+			throw new Error(
+				`${quiz}/${region}: vali wrote no ${region}-locations.json — see its output above`,
+			);
 		}
 		const count = JSON.parse(readFileSync(locationsFile, 'utf8')).length;
 		if (count === 0) {
@@ -203,7 +253,9 @@ for (const quiz of quizzes) {
 			continue;
 		}
 		writeFileSync(hashFile, hash + '\n');
-		console.log(`${quiz}/${region}: ${count} locations → vali-maps/${quiz}/${region}-locations.json`);
+		console.log(
+			`${quiz}/${region}: ${count} locations → vali-maps/${quiz}/${region}-locations.json`,
+		);
 		generated++;
 	}
 }

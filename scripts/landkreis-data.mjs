@@ -147,10 +147,9 @@ const features = source.features.filter((f) => f.properties.NAME_2 !== 'Bodensee
 // Kreise by state+name, for matching each kreisfreie Stadt to a same-named
 // surrounding Landkreis it should dissolve into
 const kreisByName = new Map(
-	features.filter((f) => !isCity(f.properties)).map((f) => [
-		`${f.properties.NAME_1}|${f.properties.NAME_2}`,
-		f,
-	]),
+	features
+		.filter((f) => !isCity(f.properties))
+		.map((f) => [`${f.properties.NAME_1}|${f.properties.NAME_2}`, f]),
 );
 const byCode = new Map(features.map((f) => [f.properties.CC_2, f]));
 if (byCode.size !== features.length) throw new Error('CC_2 codes are not unique');
@@ -159,7 +158,9 @@ const mergedInto = (feature) => {
 	const absorbed = MERGED_AWAY[feature.properties.CC_2];
 	if (absorbed) return byCode.get(absorbed);
 	if (!isCity(feature.properties)) return null;
-	return kreisByName.get(`${feature.properties.NAME_1}|${stripType(feature.properties.NAME_2)}`) ?? null;
+	return (
+		kreisByName.get(`${feature.properties.NAME_1}|${stripType(feature.properties.NAME_2)}`) ?? null
+	);
 };
 
 // Resolve every feature's dissolve target before rewriting any properties —

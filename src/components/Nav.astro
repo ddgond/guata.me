@@ -26,17 +26,19 @@ const items = [
 		)
 	}
 	<div class="links">
-		{items.map((item) =>
-			item.id === active ? (
-				<a href={item.href} class="item active" aria-current="page">
-					{item.label}
-				</a>
-			) : (
-				<a href={item.href} class="item">
-					{item.label}
-				</a>
+		{
+			items.map((item) =>
+				item.id === active ? (
+					<a href={item.href} class="item active" aria-current="page">
+						{item.label}
+					</a>
+				) : (
+					<a href={item.href} class="item">
+						{item.label}
+					</a>
+				),
 			)
-		)}
+		}
 	</div>
 </nav>
 
@@ -77,8 +79,7 @@ const items = [
 	}
 	.item.active {
 		color: var(--ink);
-		background:
-			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 6' preserveAspectRatio='none'%3E%3Cpath d='M4 3 C 15 1, 30 5, 56 3' fill='none' stroke='%230284c7' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E")
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 6' preserveAspectRatio='none'%3E%3Cpath d='M4 3 C 15 1, 30 5, 56 3' fill='none' stroke='%230284c7' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E")
 			bottom / 80% 6px no-repeat;
 	}
 </style>

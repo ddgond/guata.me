@@ -24,7 +24,7 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 
 <map-quiz data-quiz={quiz} data-scope={scope} data-initial={initial}>
 	<div class="bar top">
-		{pickerLabel && <select class="picker" aria-label={pickerLabel}></select>}
+		{pickerLabel && <select class="picker" aria-label={pickerLabel} />}
 		<button class="start" disabled>Start Quiz</button>
 	</div>
 	<div class="bar status" aria-live="polite">loading map…</div>
@@ -45,7 +45,9 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 		<div class="overlay confirm-overlay" hidden>
 			<div class="dialog" role="dialog" aria-modal="true" aria-label="Confirm map option change">
 				<p>Changing map options voids progress tracking for this quiz run.</p>
-				<label class="dont-ask"><input type="checkbox" class="dont-ask-box" /> Don't ask me again</label>
+				<label class="dont-ask"
+					><input type="checkbox" class="dont-ask-box" /> Don't ask me again</label
+				>
 				<div class="dialog-actions">
 					<button class="cancel">Cancel</button>
 					<button class="confirm">Continue</button>

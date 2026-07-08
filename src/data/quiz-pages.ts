@@ -74,7 +74,8 @@ export const quizPages: QuizPageDef[] = [
 		title: 'US Area Codes',
 		section: 'area-codes',
 		stats: '362 codes · by region or all of the United States',
-		description: "All US area codes, grouped into regions so you don't have to learn them all at once.",
+		description:
+			"All US area codes, grouped into regions so you don't have to learn them all at once.",
 		intro: areaCodeLinks,
 		quiz: 'area-us',
 		pickerLabel: 'Choose a region',

@@ -4,9 +4,9 @@ import ProjectEntry from './ProjectEntry.astro';
 
 const { category, heading } = Astro.props;
 
-const projects = (await getCollection('projects', (p) => p.data.categories.includes(category))).sort(
-	(a, b) => b.data.order - a.data.order
-);
+const projects = (
+	await getCollection('projects', (p) => p.data.categories.includes(category))
+).sort((a, b) => b.data.order - a.data.order);
 ---
 
 <h2 class="section">{heading}</h2>

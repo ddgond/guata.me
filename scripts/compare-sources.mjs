@@ -75,15 +75,24 @@ const report = (name, ok, detail) => {
 // (super-duper also carries City and label anchors). Geometry + code
 // identity is the whole relationship.
 for (const [name, emilyUrl, sdUrl] of [
-	['Japan', 'https://emily.bz/geojson/phone/JP_2.json', 'https://super-duper.fr/geojson/japan_areacodes.geojson'],
-	['Brazil', 'https://emily.bz/geojson/phone/BR_2.json', 'https://super-duper.fr/geojson/brazil_areacodes.geojson'],
+	[
+		'Japan',
+		'https://emily.bz/geojson/phone/JP_2.json',
+		'https://super-duper.fr/geojson/japan_areacodes.geojson',
+	],
+	[
+		'Brazil',
+		'https://emily.bz/geojson/phone/BR_2.json',
+		'https://super-duper.fr/geojson/brazil_areacodes.geojson',
+	],
 ]) {
 	const emily = parse(await fetchBytes(emilyUrl)).features;
 	const sd = parse(await fetchBytes(sdUrl)).features;
 	const same =
 		emily.length === sd.length &&
 		emily.every(
-			(f, i) => geomKey(f) === geomKey(sd[i]) && f.properties.AreaCode === sd[i].properties.AreaCode,
+			(f, i) =>
+				geomKey(f) === geomKey(sd[i]) && f.properties.AreaCode === sd[i].properties.AreaCode,
 		);
 	report(
 		`${name} area codes (emily vs super-duper)`,
@@ -102,7 +111,9 @@ for (const [name, emilyUrl, sdUrl] of [
 // whether that partial overlap collapses (i.e. one side rebuilt its file).
 {
 	const emily = parse(await fetchBytes('https://emily.bz/geojson/phone/US_3.json')).features;
-	const sd = parse(await fetchBytes('https://super-duper.fr/geojson/us_areacodes_3.geojson')).features;
+	const sd = parse(
+		await fetchBytes('https://super-duper.fr/geojson/us_areacodes_3.geojson'),
+	).features;
 	const sdCodeByGeom = new Map(sd.map((f) => [geomKey(f), f.properties.AreaCode]));
 	const matched = emily.filter((f) => sdCodeByGeom.has(geomKey(f)));
 	const sameCode = matched.filter((f) => sdCodeByGeom.get(geomKey(f)) === f.properties.AreaCode);
@@ -138,5 +149,9 @@ for (const [name, emilyUrl, sdUrl] of [
 }
 
 const failed = results.filter((ok) => !ok).length;
-console.log(failed ? `${failed} relationship(s) changed since data-sources.md was written` : 'All source relationships hold');
+console.log(
+	failed
+		? `${failed} relationship(s) changed since data-sources.md was written`
+		: 'All source relationships hold',
+);
 process.exitCode = failed ? 1 : 0;

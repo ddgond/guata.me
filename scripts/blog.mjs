@@ -73,7 +73,10 @@ function openInEditor(file) {
 	const editor = process.env.VISUAL || process.env.EDITOR;
 	if (!editor) fail('Set $VISUAL or $EDITOR to your editor command first.');
 	// $EDITOR may include flags (e.g. "code --wait"), so run through the shell.
-	const { status } = spawnSync(`${editor} ${JSON.stringify(file)}`, { shell: true, stdio: 'inherit' });
+	const { status } = spawnSync(`${editor} ${JSON.stringify(file)}`, {
+		shell: true,
+		stdio: 'inherit',
+	});
 	return status ?? 0;
 }
 
@@ -161,7 +164,7 @@ if (!COMMANDS[command]) {
 		'Usage: npm run blog -- <new|edit|publish>\n' +
 			'  new "Title" [tag1,tag2]  scaffold a draft\n' +
 			'  edit [slug]              open a post in your editor\n' +
-			'  publish [slug]           set draft: false and stamp pubDate'
+			'  publish [slug]           set draft: false and stamp pubDate',
 	);
 	process.exit(1);
 }

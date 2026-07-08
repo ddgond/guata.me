@@ -22,13 +22,12 @@ const fullImages = new Map(
 					format: 'webp',
 					quality: 85,
 				}),
-			])
-	)
+			]),
+	),
 );
 
 const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-const statusClass =
-	status === 'completed' ? 'green' : status === 'abandoned' ? 'red' : 'amber';
+const statusClass = status === 'completed' ? 'green' : status === 'abandoned' ? 'red' : 'amber';
 ---
 
 <article class="project">

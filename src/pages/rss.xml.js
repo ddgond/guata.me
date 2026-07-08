@@ -4,7 +4,7 @@ import { getCollection } from 'astro:content';
 export async function GET(context) {
 	// Drafts never appear in the feed, not even in dev
 	const posts = (await getCollection('posts', (post) => !post.data.draft)).sort(
-		(a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
+		(a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
 	);
 	return rss({
 		title: 'Dan Dangond · Blog',
