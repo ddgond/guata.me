@@ -31,8 +31,12 @@ export type QuizDef = {
 	label(feature: QuizFeature): string;
 	/** The quiz prompts a shape answers ("203/475" → ["203", "475"]) */
 	prompts(feature: QuizFeature): string[];
-	/** On-demand hint text for a prompt; omit for quizzes without hints */
-	mnemonic?(prompt: string): string;
+	/**
+	 * On-demand hint text for a prompt; omit for quizzes without hints. Also
+	 * receives the shapes answering the prompt, for hints stored as feature
+	 * properties (e.g. a romanization) rather than derived from the prompt.
+	 */
+	hint?(prompt: string, features: QuizFeature[]): string;
 	/** Whether the Labels tile toggle renders; without it tiles stay labeled */
 	labelsToggle: boolean;
 	/** Toggle combinations tracked in the progress dialog, in column order */
@@ -582,7 +586,7 @@ class MapQuiz extends HTMLElement {
 		const name = document.createElement('strong');
 		name.textContent = this.current!.prompt;
 		const count = ` · ${this.completed}/${this.total}`;
-		if (!this.def.mnemonic) {
+		if (!this.def.hint) {
 			this.status.append(name, `.${count}`);
 			return;
 		}
@@ -594,7 +598,7 @@ class MapQuiz extends HTMLElement {
 		hint.className = 'hint';
 		hint.textContent = '(hint)';
 		hint.addEventListener('click', () =>
-			hint.replaceWith(` · ${this.def.mnemonic!(this.current!.prompt)}`),
+			hint.replaceWith(` · ${this.def.hint!(this.current!.prompt, this.current!.features)}`),
 		);
 		this.status.append(name, ' ', hint, count);
 	}

@@ -14,6 +14,33 @@ import {
 } from './map-quiz';
 import { dominicStorageKey, mnemonics as defaultMnemonics } from '../data/mnemonics';
 
+// --- shared drill wiring ---------------------------------------------------
+
+// Picker/filter/progress plumbing for quizzes whose only drill is a flat
+// regions table plus an all-of-country row (landkreise, US area codes; the
+// kabupaten quiz stays bespoke for its nested region/province drills).
+// Progress cells are keyed `prefix:region` and `prefix:all`.
+const regionDrill = (
+	prefix: string,
+	regions: Record<string, string>,
+	allLabel: string,
+	member: (feature: QuizFeature, region: string) => boolean,
+): Pick<QuizDef, 'pickerEntries' | 'filter' | 'scopeKey' | 'progressRows'> => ({
+	pickerEntries: () => [
+		...Object.entries(regions).map(([value, label]) => ({ value, label })),
+		{ value: 'all', label: allLabel },
+	],
+	filter: (_scope, selection, features) =>
+		!selection || selection === 'all'
+			? features
+			: features.filter((f) => member(f, selection)),
+	scopeKey: (_scope, selection) => `${prefix}:${selection ?? 'all'}`,
+	progressRows: () => [
+		...Object.entries(regions).map(([key, label]) => ({ label, key: `${prefix}:${key}` })),
+		{ label: allLabel, key: `${prefix}:all` },
+	],
+});
+
 // --- kabupaten -----------------------------------------------------------
 
 // Region groupings for scope="region" and the optgroups of the province
@@ -192,19 +219,7 @@ const landkreise: QuizDef = {
 	progressKey: 'landkreis-progress',
 	skipConfirmKey: 'landkreis-skip-toggle-confirm',
 	uiKey: () => 'landkreis-ui',
-	pickerEntries: () => [
-		...Object.entries(LANDKREIS_REGIONS).map(([value, label]) => ({ value, label })),
-		{ value: 'all', label: 'All Germany' },
-	],
-	filter: (_scope, selection, features) =>
-		!selection || selection === 'all'
-			? features
-			: features.filter((f) => f.properties.region === selection),
-	scopeKey: (_scope, selection) => `de:${selection ?? 'all'}`,
-	progressRows: () => [
-		...Object.entries(LANDKREIS_REGIONS).map(([key, label]) => ({ label, key: `de:${key}` })),
-		{ label: 'All Germany', key: 'de:all' },
-	],
+	...regionDrill('de', LANDKREIS_REGIONS, 'All Germany', (f, region) => f.properties.region === region),
 };
 
 // --- area codes ----------------------------------------------------------
@@ -280,7 +295,7 @@ const areaCodes = (country: string, countryLabel: string, overrides: Partial<Qui
 	label: (f) => f.properties.code,
 	// Overlay codes share a shape ("203/475") and are asked one at a time
 	prompts: (f) => f.properties.code.split('/'),
-	mnemonic: dominicHint,
+	hint: dominicHint,
 	labelsToggle: false,
 	modes: ['borders', 'neither'],
 	progressKey: 'area-code-progress',
@@ -298,24 +313,12 @@ registerQuizzes({
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
 	'area-us': areaCodes('us', 'United States', {
-		pickerEntries: () => [
-			...Object.entries(US_REGIONS).map(([value, region]) => ({ value, label: region.label })),
-			{ value: 'all', label: 'All United States' },
-		],
-		filter: (_scope, selection, features) =>
-			!selection || selection === 'all'
-				? features
-				: features.filter((f: QuizFeature) =>
-						US_REGIONS[selection].states.includes(f.properties.state),
-					),
-		scopeKey: (_scope, selection) => `us:${selection ?? 'all'}`,
-		progressRows: () => [
-			...Object.entries(US_REGIONS).map(([key, region]) => ({
-				label: region.label,
-				key: `us:${key}`,
-			})),
-			{ label: 'All United States', key: 'us:all' },
-		],
+		...regionDrill(
+			'us',
+			Object.fromEntries(Object.entries(US_REGIONS).map(([key, region]) => [key, region.label])),
+			'All United States',
+			(f, region) => US_REGIONS[region].states.includes(f.properties.state),
+		),
 		fitBounds: (_scope, selection) => (!selection || selection === 'all' ? LOWER_48 : null),
 	}),
 });

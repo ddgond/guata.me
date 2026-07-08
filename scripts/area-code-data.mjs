@@ -18,11 +18,10 @@
 //
 // Usage: node scripts/area-code-data.mjs
 
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, statSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dataPath, fetchJson, simplifyAndWrite } from './lib/quiz-data.mjs';
 
+// The JP/BR sources mirror super-duper.fr's areacodes files; the US one is a
+// hand-edited helloquiz derivative (see data-sources.md)
 const COUNTRIES = {
 	jp: {
 		source: 'https://emily.bz/geojson/phone/JP_2.json',
@@ -46,16 +45,11 @@ const COUNTRIES = {
 
 const DROP_STATES = new Set(['GU', 'AS', 'MP']);
 
-mkdirSync(new URL('../public/data', import.meta.url).pathname, { recursive: true });
-
 for (const [country, { source, quiz, expectedShapes, expectedCodes }] of Object.entries(
 	COUNTRIES,
 )) {
-	console.log(`Fetching ${source} ...`);
-	const geojson = await (await fetch(source)).json();
-	const questions = (
-		await (await fetch(`https://helloquiz.app/api/quiz/${quiz}/question`)).json()
-	).message;
+	const geojson = await fetchJson(source);
+	const questions = (await fetchJson(`https://helloquiz.app/api/quiz/${quiz}/question`)).message;
 
 	// Codes per feature index, in question-list order
 	const codesByFeature = new Map();
@@ -106,27 +100,14 @@ for (const [country, { source, quiz, expectedShapes, expectedCodes }] of Object.
 		);
 	}
 
-	const filtered = join(tmpdir(), `area-codes-${country}-filtered.json`);
-	writeFileSync(filtered, JSON.stringify({ type: 'FeatureCollection', features }));
-
-	const output = new URL(`../public/data/area-codes-${country}.json`, import.meta.url).pathname;
-	execFileSync(
-		'npx',
-		[
-			'mapshaper',
-			filtered,
-			'-simplify', 'weighted', '40%', 'keep-shapes',
-			'-o', 'precision=0.001', 'format=geojson', output,
-		],
-		{ stdio: 'inherit' },
-	);
-
-	const result = JSON.parse(readFileSync(output, 'utf8'));
-	if (result.features.length !== expectedShapes) {
-		throw new Error(`${country}: simplify changed the feature count: ${result.features.length}`);
-	}
-	const kb = Math.round(statSync(output).size / 1024);
+	const output = dataPath(`area-codes-${country}.json`);
+	const result = simplifyAndWrite({
+		features,
+		output,
+		simplify: '40%',
+		expectedCount: expectedShapes,
+	});
 	console.log(
-		`Wrote ${output} (${result.features.length} shapes, ${distinctCodes.size} codes, ${kb} KB)`,
+		`Wrote ${output} (${result.features.length} shapes, ${distinctCodes.size} codes, ${result.kb} KB)`,
 	);
 }

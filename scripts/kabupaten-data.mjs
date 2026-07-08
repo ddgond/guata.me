@@ -10,13 +10,11 @@
 //
 // Usage: node scripts/kabupaten-data.mjs
 
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, statSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dataPath, fetchJson, simplifyAndWrite } from './lib/quiz-data.mjs';
 
+// A bespoke helloquiz build with no public counterpart (see data-sources.md)
 const SOURCE = 'https://emily.bz/geojson/subdivision/ID_2.json';
-const OUTPUT = new URL('../public/data/kabupaten.json', import.meta.url).pathname;
+const OUTPUT = dataPath('kabupaten.json');
 
 // The quiz's hand-tuned tweaks on top of the isGeo flag, by feature index in
 // the source file. Excludes are mostly kota enclaves (city shapes inside a
@@ -63,8 +61,7 @@ const RENAME = {
 // promoted kota, minus the nested kota dissolved away
 const EXPECTED_COUNT = 400 + PROMOTE.size - MERGE_NESTED.size;
 
-console.log(`Fetching ${SOURCE} ...`);
-const source = await (await fetch(SOURCE)).json();
+const source = await fetchJson(SOURCE);
 
 // A few GADM names arrive letter-spaced ("S I A K"); collapse to "Siak"
 const normalizeName = (name) =>
@@ -132,26 +129,11 @@ const features = [
 	),
 ];
 
-const filtered = join(tmpdir(), 'kabupaten-filtered.json');
-writeFileSync(filtered, JSON.stringify({ type: 'FeatureCollection', features }));
-
-mkdirSync(new URL('../public/data', import.meta.url).pathname, { recursive: true });
-execFileSync(
-	'npx',
-	[
-		'mapshaper',
-		filtered,
-		'-dissolve', 'fields=key', 'copy-fields=name,province',
-		'-each', 'delete key',
-		'-simplify', 'weighted', '25%', 'keep-shapes',
-		'-o', `precision=0.001`, 'format=geojson', OUTPUT,
-	],
-	{ stdio: 'inherit' },
-);
-
-const result = JSON.parse(readFileSync(OUTPUT, 'utf8'));
-if (result.features.length !== EXPECTED_COUNT) {
-	throw new Error(`Dissolve changed the feature count: ${result.features.length}`);
-}
-const kb = Math.round(statSync(OUTPUT).size / 1024);
-console.log(`Wrote ${OUTPUT} (${result.features.length} kabupaten, ${kb} KB)`);
+const result = simplifyAndWrite({
+	features,
+	output: OUTPUT,
+	dissolve: { key: 'key', copyFields: ['name', 'province'] },
+	simplify: '25%',
+	expectedCount: EXPECTED_COUNT,
+});
+console.log(`Wrote ${OUTPUT} (${result.features.length} kabupaten, ${result.kb} KB)`);

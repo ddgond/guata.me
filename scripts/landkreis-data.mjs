@@ -21,13 +21,11 @@
 //
 // Usage: node scripts/landkreis-data.mjs
 
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, statSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dataPath, fetchJson, simplifyAndWrite } from './lib/quiz-data.mjs';
 
+// A byte-identical mirror of GADM 4.1's gadm41_DEU_2.json (see data-sources.md)
 const SOURCE = 'https://emily.bz/geojson/subdivision/DE_2.json';
-const OUTPUT = new URL('../public/data/landkreise.json', import.meta.url).pathname;
+const OUTPUT = dataPath('landkreise.json');
 
 // Districts that no longer exist, dissolved into the Kreis that absorbed them
 const MERGED_AWAY = {
@@ -135,8 +133,7 @@ const EXPECTED_REGIONS = {
 };
 const EXPECTED_COUNT = Object.values(EXPECTED_REGIONS).reduce((a, b) => a + b, 0);
 
-console.log(`Fetching ${SOURCE} ...`);
-const source = await (await fetch(SOURCE)).json();
+const source = await fetchJson(SOURCE);
 
 // "München(KreisfreieStadt)" → "München"; the closing paren is optional
 // because Kaiserslautern's suffix hits GADM's name-length truncation
@@ -201,26 +198,11 @@ for (const [region, expected] of Object.entries(EXPECTED_REGIONS)) {
 	}
 }
 
-const filtered = join(tmpdir(), 'landkreise-filtered.json');
-writeFileSync(filtered, JSON.stringify({ type: 'FeatureCollection', features }));
-
-mkdirSync(new URL('../public/data', import.meta.url).pathname, { recursive: true });
-execFileSync(
-	'npx',
-	[
-		'mapshaper',
-		filtered,
-		'-dissolve', 'fields=key', 'copy-fields=name,region',
-		'-each', 'delete key',
-		'-simplify', 'weighted', '25%', 'keep-shapes',
-		'-o', `precision=0.001`, 'format=geojson', OUTPUT,
-	],
-	{ stdio: 'inherit' },
-);
-
-const result = JSON.parse(readFileSync(OUTPUT, 'utf8'));
-if (result.features.length !== EXPECTED_COUNT) {
-	throw new Error(`Dissolve changed the feature count: ${result.features.length}`);
-}
-const kb = Math.round(statSync(OUTPUT).size / 1024);
-console.log(`Wrote ${OUTPUT} (${result.features.length} Kreise, ${kb} KB)`);
+const result = simplifyAndWrite({
+	features,
+	output: OUTPUT,
+	dissolve: { key: 'key', copyFields: ['name', 'region'] },
+	simplify: '25%',
+	expectedCount: EXPECTED_COUNT,
+});
+console.log(`Wrote ${OUTPUT} (${result.features.length} Kreise, ${result.kb} KB)`);
