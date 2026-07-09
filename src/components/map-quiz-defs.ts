@@ -4,7 +4,9 @@
 // scripts/area-code-data.mjs), the German Landkreise quiz
 // (/data/landkreise.json, regenerate with scripts/landkreis-data.mjs), and
 // the Japanese cities quiz (/data/japan-cities.json, regenerate with
-// scripts/japan-cities-data.mjs). Importing this module registers them all.
+// scripts/japan-cities-data.mjs), and the Thai provinces quiz
+// (/data/thai-provinces.json, regenerate with scripts/thai-provinces-data.mjs).
+// Importing this module registers them all.
 
 import {
 	registerQuizzes,
@@ -354,6 +356,39 @@ const japanCities: QuizDef = {
 	),
 };
 
+// --- Thai provinces --------------------------------------------------------
+
+// Labels for the region keys scripts/thai-provinces-data.mjs writes into the
+// data: the six standard geographic regions, swept roughly north to south.
+// At 5–22 provinces each, every region is a single drill — no bands needed.
+const THAI_PROVINCE_REGIONS: Record<string, string> = {
+	north: 'North',
+	isan: 'Northeast (Isan)',
+	central: 'Central',
+	west: 'West',
+	east: 'East',
+	south: 'South',
+};
+
+const thaiProvinces: QuizDef = {
+	dataUrl: '/data/thai-provinces.json',
+	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
+	label: (f) => f.properties.name,
+	prompts: (f) => [f.properties.name],
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'thai-province-progress',
+	skipConfirmKey: 'thai-province-skip-toggle-confirm',
+	uiKey: () => 'thai-province-ui',
+	share: share('thai-provinces'),
+	...regionDrill(
+		'th',
+		THAI_PROVINCE_REGIONS,
+		'All Thailand',
+		(f, region) => f.properties.region === region,
+	),
+};
+
 // --- area codes ----------------------------------------------------------
 
 // Mirrors the Dominic builder's load(): the reader's saved list wins when
@@ -449,6 +484,7 @@ registerQuizzes({
 	kabupaten,
 	landkreise,
 	'japan-cities': japanCities,
+	'thai-provinces': thaiProvinces,
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
 	'area-us': areaCodes('us', 'United States', {

@@ -57,6 +57,19 @@ export const quizPages: QuizPageDef[] = [
 		labelsToggle: true,
 	},
 	{
+		slug: 'thai-provinces',
+		title: 'Thai Provinces',
+		section: 'subdivisions',
+		stats: '77 provinces · by region or all of Thailand',
+		description:
+			"All 77 provinces of Thailand, grouped into regions so you don't have to learn them " +
+			'all at once.',
+		intro: studyPost('these'),
+		quiz: 'thai-provinces',
+		pickerLabel: 'Choose a region',
+		labelsToggle: true,
+	},
+	{
 		slug: 'japan-cities',
 		title: 'Japanese Cities',
 		section: 'cities',
