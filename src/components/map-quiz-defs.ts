@@ -241,7 +241,8 @@ const kabupaten: QuizDef = {
 
 // Labels for the region keys scripts/landkreis-data.mjs writes into the data:
 // Bundesländer with the city-states and smallest states folded into a
-// neighbor and Bayern split at the Franken/Oberpfalz line, swept roughly
+// neighbor, Bayern split at the Franken/Oberpfalz line, and
+// Nordrhein-Westfalen split at the Landschaftsverband line, swept roughly
 // north-to-south
 const LANDKREIS_REGIONS: Record<string, string> = {
 	north: 'Schleswig-Holstein, Hamburg & MV',
@@ -250,7 +251,8 @@ const LANDKREIS_REGIONS: Record<string, string> = {
 	'sachsen-anhalt': 'Sachsen-Anhalt',
 	sachsen: 'Sachsen',
 	thueringen: 'Thüringen',
-	nrw: 'Nordrhein-Westfalen',
+	westfalen: 'Westfalen-Lippe',
+	rheinland: 'Rheinland',
 	hessen: 'Hessen',
 	'rlp-saarland': 'Rheinland-Pfalz & Saarland',
 	bw: 'Baden-Württemberg',
@@ -259,7 +261,7 @@ const LANDKREIS_REGIONS: Record<string, string> = {
 };
 
 // Playable bands across the country between the regions and all-Germany
-// tiers, sized 115/139/123 districts. Sachsen goes north (not Thüringen's
+// tiers, sized 113/141/123 districts. Sachsen goes north (not Thüringen's
 // band) to keep Central at a manageable size, so North dips around Thüringen
 // rather than being a clean latitude stripe.
 const LANDKREIS_BANDS: Record<string, { label: string; regions: string[] }> = {
@@ -269,7 +271,7 @@ const LANDKREIS_BANDS: Record<string, { label: string; regions: string[] }> = {
 	},
 	central: {
 		label: 'Central Germany',
-		regions: ['thueringen', 'nrw', 'hessen', 'rlp-saarland'],
+		regions: ['thueringen', 'westfalen', 'rheinland', 'hessen', 'rlp-saarland'],
 	},
 	south: {
 		label: 'South Germany',

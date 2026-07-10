@@ -14,11 +14,13 @@
 // keyed by CC_2 — the official five-digit Kreisschlüssel. Geometry is
 // simplified with mapshaper so the whole file stays a few hundred KB.
 //
-// Each feature carries { name, region }, where region is one of the twelve
+// Each feature carries { name, region }, where region is one of the thirteen
 // drill groups the quiz picker offers: Bundesländer, with the city-states and
-// the smallest states folded into a neighbor and Bayern split between Franken
-// & Oberpfalz and the southern Bezirke (the Kreisschlüssel's third digit is
-// the Regierungsbezirk, so 093xx–096xx is the north).
+// the smallest states folded into a neighbor, Bayern split between Franken
+// & Oberpfalz and the southern Bezirke, and Nordrhein-Westfalen split between
+// Rheinland and Westfalen-Lippe (the Kreisschlüssel's third digit is the
+// Regierungsbezirk, so 093xx–096xx is north Bayern and 051xx/053xx —
+// Düsseldorf and Köln — is the Rheinland).
 //
 // Usage: node scripts/landkreis-data.mjs
 
@@ -91,7 +93,8 @@ const RENAME = {
 };
 
 // Drill groups: Bundesländer with Hamburg, Mecklenburg-Vorpommern, Bremen,
-// Berlin, and Saarland folded into a neighbor, and Bayern split in half
+// Berlin, and Saarland folded into a neighbor, and Bayern and
+// Nordrhein-Westfalen each split in half
 const STATE_REGIONS = {
 	'Schleswig-Holstein': 'north',
 	Hamburg: 'north',
@@ -103,19 +106,23 @@ const STATE_REGIONS = {
 	'Sachsen-Anhalt': 'sachsen-anhalt',
 	Sachsen: 'sachsen',
 	Thüringen: 'thueringen',
-	'Nordrhein-Westfalen': 'nrw',
 	Hessen: 'hessen',
 	'Rheinland-Pfalz': 'rlp-saarland',
 	Saarland: 'rlp-saarland',
 	'Baden-Württemberg': 'bw',
 };
 const NORTH_BAYERN_BEZIRKE = new Set(['093', '094', '095', '096']); // Oberpfalz + the three Franken
+const RHEINLAND_BEZIRKE = new Set(['051', '053']); // Düsseldorf + Köln
 const regionFor = (props) =>
 	props.NAME_1 === 'Bayern'
 		? NORTH_BAYERN_BEZIRKE.has(props.CC_2.slice(0, 3))
 			? 'nordbayern'
 			: 'suedbayern'
-		: STATE_REGIONS[props.NAME_1];
+		: props.NAME_1 === 'Nordrhein-Westfalen'
+			? RHEINLAND_BEZIRKE.has(props.CC_2.slice(0, 3))
+				? 'rheinland'
+				: 'westfalen'
+			: STATE_REGIONS[props.NAME_1];
 
 // Keep the drill sizes honest: a count change here means GADM's file (or a
 // district reform) moved under us and the groupings deserve a fresh look
@@ -126,7 +133,8 @@ const EXPECTED_REGIONS = {
 	'sachsen-anhalt': 14,
 	sachsen: 12,
 	thueringen: 22,
-	nrw: 53,
+	westfalen: 27,
+	rheinland: 26,
 	hessen: 25,
 	'rlp-saarland': 41,
 	bw: 42,

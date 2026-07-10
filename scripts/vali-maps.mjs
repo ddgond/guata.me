@@ -96,7 +96,7 @@ const US_REGIONS = {
 // band from colliding with the north region's files
 const LANDKREIS_BANDS = {
 	'band-north': ['north', 'niedersachsen', 'brandenburg', 'sachsen-anhalt', 'sachsen'],
-	'band-central': ['thueringen', 'nrw', 'hessen', 'rlp-saarland'],
+	'band-central': ['thueringen', 'westfalen', 'rheinland', 'hessen', 'rlp-saarland'],
 	'band-south': ['bw', 'nordbayern', 'suedbayern'],
 };
 const JAPAN_CITY_BANDS = {
