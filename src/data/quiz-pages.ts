@@ -70,6 +70,19 @@ export const quizPages: QuizPageDef[] = [
 		labelsToggle: true,
 	},
 	{
+		slug: 'belediyesi',
+		title: 'Turkish Belediyesi',
+		section: 'subdivisions',
+		stats: '973 districts · by province, region, or all of Türkiye',
+		description:
+			"All 973 districts of Türkiye, grouped into provinces and larger regions so you don't " +
+			'have to learn them all at once.',
+		intro: studyPost('these'),
+		quiz: 'belediyesi',
+		pickerLabel: 'Choose an area',
+		labelsToggle: true,
+	},
+	{
 		slug: 'japan-cities',
 		title: 'Japanese Cities',
 		section: 'cities',

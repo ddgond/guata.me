@@ -75,6 +75,20 @@ exactly. The census population/name source is e-Stat's
 (`e-stat.go.jp/stat-search/file-download?statInfId=000032143614&fileKind=0`),
 frozen into the script.
 
+### Turkish belediyesi (`belediye-data.mjs`)
+
+Built from OCHA's COD-AB Türkiye admin-2 boundaries on HDX
+(`data.humdata.org/dataset/cod-ab-tur`), which carry the current 973-district
+structure (valid 2022-01-01) and stable `adm2_pcode` keys. GADM 4.1 was
+evaluated first and rejected: `gadm41_TUR_2.json` (which
+`emily.bz/geojson/subdivision/TR_2.json` mirrors **byte-identically**) is a
+pre-2008 snapshot — 929 districts, 72 undifferentiated "Merkez" entries,
+Antalya unsplit, none of the 2012 metropolitan-reform districts — with
+mistyped names ("Kinkkale", "Zinguldak", "ŞultanKoçhisar"). COD-AB's Turkish
+names need the dotted/dotless-i restoration and rename table the script
+documents; every output name was verified against Turkish Wikipedia titles
+and the municipalities' own .bel.tr spellings.
+
 ## Sources for future quizzes
 
 - **Subdivisions**: GADM 4.1 directly

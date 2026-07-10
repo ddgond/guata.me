@@ -4,9 +4,10 @@
 // scripts/area-code-data.mjs), the German Landkreise quiz
 // (/data/landkreise.json, regenerate with scripts/landkreis-data.mjs), and
 // the Japanese cities quiz (/data/japan-cities.json, regenerate with
-// scripts/japan-cities-data.mjs), and the Thai provinces quiz
-// (/data/thai-provinces.json, regenerate with scripts/thai-provinces-data.mjs).
-// Importing this module registers them all.
+// scripts/japan-cities-data.mjs), the Thai provinces quiz
+// (/data/thai-provinces.json, regenerate with scripts/thai-provinces-data.mjs),
+// and the Turkish belediyesi quiz (/data/belediyesi.json, regenerate with
+// scripts/belediye-data.mjs). Importing this module registers them all.
 
 import {
 	registerQuizzes,
@@ -389,6 +390,153 @@ const thaiProvinces: QuizDef = {
 	),
 };
 
+// --- Turkish belediyesi ----------------------------------------------------
+
+// Province drills grouped into the seven standard geographic-region bands,
+// swept roughly west to east within each band. Provinces run 3–39 districts,
+// bands 82–197. A few district names repeat across provinces (Kemer, Kale,
+// Pazar, …) exactly as they do on Google's labels; in band and all-Türkiye
+// runs the engine folds same-named shapes into one prompt, like overlay area
+// codes.
+const BELEDIYE_BANDS: Record<string, { label: string; regions: string[] }> = {
+	marmara: {
+		label: 'Marmara',
+		regions: [
+			'Edirne',
+			'Kırklareli',
+			'Tekirdağ',
+			'İstanbul',
+			'Çanakkale',
+			'Balıkesir',
+			'Bursa',
+			'Yalova',
+			'Kocaeli',
+			'Sakarya',
+			'Bilecik',
+		],
+	},
+	aegean: {
+		label: 'Aegean',
+		regions: ['İzmir', 'Manisa', 'Aydın', 'Muğla', 'Denizli', 'Uşak', 'Kütahya', 'Afyonkarahisar'],
+	},
+	mediterranean: {
+		label: 'Mediterranean',
+		regions: [
+			'Antalya',
+			'Burdur',
+			'Isparta',
+			'Mersin',
+			'Adana',
+			'Osmaniye',
+			'Hatay',
+			'Kahramanmaraş',
+		],
+	},
+	central: {
+		label: 'Central Anatolia',
+		regions: [
+			'Eskişehir',
+			'Ankara',
+			'Çankırı',
+			'Kırıkkale',
+			'Kırşehir',
+			'Yozgat',
+			'Sivas',
+			'Kayseri',
+			'Nevşehir',
+			'Aksaray',
+			'Niğde',
+			'Konya',
+			'Karaman',
+		],
+	},
+	blacksea: {
+		label: 'Black Sea',
+		regions: [
+			'Bolu',
+			'Düzce',
+			'Zonguldak',
+			'Karabük',
+			'Bartın',
+			'Kastamonu',
+			'Sinop',
+			'Çorum',
+			'Amasya',
+			'Samsun',
+			'Tokat',
+			'Ordu',
+			'Giresun',
+			'Gümüşhane',
+			'Bayburt',
+			'Trabzon',
+			'Rize',
+			'Artvin',
+		],
+	},
+	east: {
+		label: 'Eastern Anatolia',
+		regions: [
+			'Erzincan',
+			'Erzurum',
+			'Kars',
+			'Ardahan',
+			'Iğdır',
+			'Ağrı',
+			'Malatya',
+			'Elazığ',
+			'Tunceli',
+			'Bingöl',
+			'Muş',
+			'Bitlis',
+			'Van',
+			'Hakkari',
+		],
+	},
+	southeast: {
+		label: 'Southeastern Anatolia',
+		regions: [
+			'Gaziantep',
+			'Kilis',
+			'Adıyaman',
+			'Şanlıurfa',
+			'Diyarbakır',
+			'Mardin',
+			'Batman',
+			'Siirt',
+			'Şırnak',
+		],
+	},
+};
+
+// Province drill keys are the province display names themselves, like the
+// kabupaten quiz
+const BELEDIYE_PROVINCES: Record<string, string> = Object.fromEntries(
+	Object.values(BELEDIYE_BANDS)
+		.flatMap((band) => band.regions)
+		.map((province) => [province, province]),
+);
+
+const belediyesi: QuizDef = {
+	dataUrl: '/data/belediyesi.json',
+	attribution:
+		'Imagery © Google · Boundaries © <a href="https://data.humdata.org/dataset/cod-ab-tur">OCHA COD-AB</a>',
+	label: (f) => f.properties.name,
+	prompts: (f) => [f.properties.name],
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'belediye-progress',
+	skipConfirmKey: 'belediye-skip-toggle-confirm',
+	uiKey: () => 'belediye-ui',
+	share: share('belediyesi'),
+	...regionDrill(
+		'tr',
+		BELEDIYE_PROVINCES,
+		'All Türkiye',
+		(f, region) => f.properties.province === region,
+		BELEDIYE_BANDS,
+	),
+};
+
 // --- area codes ----------------------------------------------------------
 
 // Mirrors the Dominic builder's load(): the reader's saved list wins when
@@ -485,6 +633,7 @@ registerQuizzes({
 	landkreise,
 	'japan-cities': japanCities,
 	'thai-provinces': thaiProvinces,
+	belediyesi,
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
 	'area-us': areaCodes('us', 'United States', {
