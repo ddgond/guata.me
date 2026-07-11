@@ -18,6 +18,7 @@ export type QuizPageDef = {
 	scope?: string;
 	pickerLabel?: string;
 	labelsToggle?: boolean;
+	fontPicker?: boolean;
 };
 
 const studyPost = (subject: string) =>
@@ -81,6 +82,7 @@ export const quizPages: QuizPageDef[] = [
 		quiz: 'thai-provinces-thai',
 		pickerLabel: 'Choose a region',
 		labelsToggle: true,
+		fontPicker: true,
 	},
 	{
 		slug: 'belediyesi',

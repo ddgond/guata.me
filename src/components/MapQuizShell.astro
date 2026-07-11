@@ -10,6 +10,8 @@
 // pickerLabel  — aria-label for the scope picker; omit to render no picker
 // labelsToggle — render the Labels tile toggle (quizzes where map labels are
 //                part of the drill)
+// fontPicker   — render the Font picker (quizzes whose definition lists
+//                typeface choices for the prompted names)
 
 interface Props {
 	quiz: string;
@@ -17,9 +19,10 @@ interface Props {
 	initial?: string;
 	pickerLabel?: string;
 	labelsToggle?: boolean;
+	fontPicker?: boolean;
 }
 
-const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
+const { quiz, scope, initial, pickerLabel, labelsToggle = false, fontPicker = false } = Astro.props;
 ---
 
 <map-quiz data-quiz={quiz} data-scope={scope} data-initial={initial}>
@@ -70,6 +73,14 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 			labelsToggle && (
 				<label>
 					<input type="checkbox" class="labels" /> Labels
+				</label>
+			)
+		}
+		{
+			fontPicker && (
+				<label>
+					Font:
+					<select class="font-picker">{null}</select>
 				</label>
 			)
 		}
@@ -130,6 +141,9 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 		border-bottom: 1px solid var(--line);
 	}
 	.bar.options {
+		/* The Font picker can overflow a phone-width row; View Progress's auto
+		   margin keeps it right-aligned on whichever line it wraps to */
+		flex-wrap: wrap;
 		border-top: 1px solid var(--line);
 		color: var(--ink-soft);
 	}
@@ -160,7 +174,16 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false } = Astro.props;
 		color: var(--sky-deep);
 		background: var(--sky-tint);
 	}
+	/* Every shape name the quiz renders — the prompt, the wrong-guess names,
+	   and the tooltip — follows the Font picker's choice; the script sets the
+	   custom property on the element (name elements are script-created, so
+	   the strong needs :global()) */
+	.bar.status :global(strong),
+	.name-tip {
+		font-family: var(--name-font, inherit);
+	}
 	.picker,
+	.font-picker,
 	.start,
 	.progress-btn,
 	.dialog-actions button,

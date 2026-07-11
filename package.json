@@ -18,6 +18,11 @@
 		"@astrojs/mdx": "^7.0.2",
 		"@astrojs/rss": "^4.0.19",
 		"@fontsource-variable/inter": "^5.2.8",
+		"@fontsource/charm": "^5.2.7",
+		"@fontsource/itim": "^5.2.7",
+		"@fontsource/kanit": "^5.2.8",
+		"@fontsource/prompt": "^5.2.8",
+		"@fontsource/sarabun": "^5.2.8",
 		"astro": "^7.0.7",
 		"leaflet": "^1.9.4"
 	},

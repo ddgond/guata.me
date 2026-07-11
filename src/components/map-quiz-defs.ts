@@ -17,6 +17,18 @@ import {
 	type QuizDef,
 	type QuizFeature,
 } from './map-quiz';
+// The Thai-script quiz's Font picker faces. Static imports land the
+// @font-face rules (a few KB, inlined by Astro) on every page with a quiz
+// embed, but each rule is unicode-range-subset and a font file only downloads
+// once its family actually renders text — so only that quiz fetches any.
+// (Dynamic import would scope the CSS to the one page, but Astro inlines
+// css-only dynamic imports while the preload helper still requests the
+// unemitted chunks, 404ing on every load.)
+import '@fontsource/sarabun/400.css';
+import '@fontsource/prompt/400.css';
+import '@fontsource/kanit/400.css';
+import '@fontsource/charm/400.css';
+import '@fontsource/itim/400.css';
 import { dominicStorageKey, mnemonics as defaultMnemonics } from '../data/mnemonics';
 import { quizPages } from '../data/quiz-pages';
 
@@ -403,6 +415,17 @@ const thaiProvincesThai: QuizDef = {
 	prompts: (f) => [f.properties.thai],
 	hint: (_prompt, features) => features[0].properties.name,
 	tipHint: true,
+	// The sign-reading spectrum: looped body text (Sarabun) through loopless
+	// Latin-like sans (Prompt, Kanit) to handwritten display (Charm, Itim),
+	// imported from @fontsource at the top of this module
+	fonts: [
+		{ label: 'Default', family: null },
+		{ label: 'Sarabun', family: "'Sarabun', sans-serif" },
+		{ label: 'Prompt', family: "'Prompt', sans-serif" },
+		{ label: 'Kanit', family: "'Kanit', sans-serif" },
+		{ label: 'Charm', family: "'Charm', cursive" },
+		{ label: 'Itim', family: "'Itim', cursive" },
+	],
 	labelsToggle: true,
 	modes: ['borders', 'neither', 'labels'],
 	progressKey: 'thai-province-thai-progress',

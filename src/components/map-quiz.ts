@@ -39,6 +39,16 @@ export type QuizDef = {
 	hint?(prompt: string, features: QuizFeature[]): string;
 	/** Append the hint to tooltips while browsing the map before a quiz run */
 	tipHint?: boolean;
+	/**
+	 * Typeface choices for the Font picker (quizzes whose prompts train script
+	 * recognition, where reading unfamiliar typefaces is part of the drill).
+	 * The chosen face applies everywhere the quiz renders a shape name: the
+	 * prompt, the wrong-guess message, and tooltips. `family` is the CSS font
+	 * stack (its faces must be imported where the quiz is defined), null for
+	 * the page default. The shell renders the picker markup only when its
+	 * fontPicker prop is set.
+	 */
+	fonts?: { label: string; family: string | null }[];
 	/** Whether the Labels tile toggle renders; without it tiles stay labeled */
 	labelsToggle: boolean;
 	/** Toggle combinations tracked in the progress dialog, in column order */
@@ -156,6 +166,7 @@ class MapQuiz extends HTMLElement {
 	bordersBox!: HTMLInputElement;
 	labelsBox: HTMLInputElement | null = null;
 	picker: HTMLSelectElement | null = null;
+	fontPicker: HTMLSelectElement | null = null;
 	nameTip!: HTMLElement;
 	progressOverlay!: HTMLElement;
 	confirmOverlay!: HTMLElement;
@@ -214,9 +225,12 @@ class MapQuiz extends HTMLElement {
 		const picker = (this.picker = this.querySelector<HTMLSelectElement>('.picker'));
 
 		// Restore the selection and toggles this instance was last left on
-		const savedUI = readStored<{ selection?: string; borders?: boolean; labels?: boolean }>(
-			this.def.uiKey(this.dataset.scope),
-		);
+		const savedUI = readStored<{
+			selection?: string;
+			borders?: boolean;
+			labels?: boolean;
+			font?: string;
+		}>(this.def.uiKey(this.dataset.scope));
 		if (savedUI?.borders !== undefined) this.bordersBox.checked = savedUI.borders;
 		if (this.labelsBox && savedUI?.labels !== undefined) this.labelsBox.checked = savedUI.labels;
 
@@ -290,6 +304,26 @@ class MapQuiz extends HTMLElement {
 			});
 		}
 
+		const fontPicker = (this.fontPicker = this.querySelector<HTMLSelectElement>('.font-picker'));
+		if (fontPicker && this.def.fonts) {
+			for (const { label, family } of this.def.fonts) {
+				const option = new Option(label, family ?? '');
+				// Each option demonstrates its own face where the browser styles
+				// options (desktop Chrome/Firefox); elsewhere it's plain text
+				if (family) option.style.fontFamily = family;
+				fontPicker.append(option);
+			}
+			if (savedUI?.font && [...fontPicker.options].some((option) => option.value === savedUI.font))
+				fontPicker.value = savedUI.font;
+			// Fonts are practice difficulty, not a tracked dimension: switching
+			// mid-run restyles live and never voids progress
+			fontPicker.addEventListener('change', () => {
+				this.applyFont();
+				this.persistUI();
+			});
+			this.applyFont();
+		}
+
 		this.startButton.addEventListener('click', () => {
 			if (this.mode === 'quiz') this.endQuiz();
 			else this.startQuiz();
@@ -306,7 +340,16 @@ class MapQuiz extends HTMLElement {
 			selection: this.picker?.value,
 			borders: this.bordersBox.checked,
 			labels: this.labelsBox?.checked,
+			font: this.fontPicker?.value,
 		});
+	}
+
+	// The shell's name elements (prompt, wrong-guess names, tooltip) read this
+	// custom property; unset falls back to the page font
+	applyFont() {
+		const family = this.fontPicker?.value;
+		if (family) this.style.setProperty('--name-font', family);
+		else this.style.removeProperty('--name-font');
 	}
 
 	// Route toggle flips through the progress guard: during a quiz the first

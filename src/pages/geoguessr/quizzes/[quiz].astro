@@ -13,14 +13,21 @@ export function getStaticPaths() {
 
 type Props = (typeof quizPages)[number];
 
-const { title, description, intro, quiz, scope, pickerLabel, labelsToggle } = Astro.props;
+const { title, description, intro, quiz, scope, pickerLabel, labelsToggle, fontPicker } =
+	Astro.props;
 ---
 
 <Layout title={title} active="geoguessr" description={description}>
 	<h2 class="section">{title}</h2>
 	<p>{description} <Fragment set:html={intro} /></p>
 
-	<MapQuizShell quiz={quiz} scope={scope} pickerLabel={pickerLabel} labelsToggle={labelsToggle} />
+	<MapQuizShell
+		quiz={quiz}
+		scope={scope}
+		pickerLabel={pickerLabel}
+		labelsToggle={labelsToggle}
+		fontPicker={fontPicker}
+	/>
 
 	<p><a href="/geoguessr/quizzes">← All quizzes</a></p>
 </Layout>
