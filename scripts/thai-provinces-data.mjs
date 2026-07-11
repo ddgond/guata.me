@@ -10,7 +10,9 @@
 // can't key that table (GADM leaves it "NA" for Bueng Kan and Chanthaburi),
 // so it's keyed by NAME_1, which is unique.
 //
-// Each feature carries { name, region }, where region is one of the six
+// Each feature carries { name, thai, region }: `thai` is the Thai-script name
+// from the table below (checked against GADM's NL_NAME_1 where it has one),
+// for the Thai-script variant of the quiz, and region is one of the six
 // standard geographic regions (the National Geographical Committee grouping):
 // North, Northeast (Isan), Central, West, East, South. The membership table
 // below lists every province by display name and doubles as the check that
@@ -110,6 +112,88 @@ const REGIONS = {
 	],
 };
 
+// Thai-script names by display name, matching the Thai labels on Google's
+// tiles (Bangkok is the full ceremonial-short form กรุงเทพมหานคร, as labeled)
+const THAI = {
+	'Mae Hong Son': 'แม่ฮ่องสอน',
+	'Chiang Rai': 'เชียงราย',
+	'Chiang Mai': 'เชียงใหม่',
+	Phayao: 'พะเยา',
+	Nan: 'น่าน',
+	Lamphun: 'ลำพูน',
+	Lampang: 'ลำปาง',
+	Phrae: 'แพร่',
+	Uttaradit: 'อุตรดิตถ์',
+	Loei: 'เลย',
+	'Nong Khai': 'หนองคาย',
+	'Bueng Kan': 'บึงกาฬ',
+	'Udon Thani': 'อุดรธานี',
+	'Nong Bua Lam Phu': 'หนองบัวลำภู',
+	'Sakon Nakhon': 'สกลนคร',
+	'Nakhon Phanom': 'นครพนม',
+	'Khon Kaen': 'ขอนแก่น',
+	Kalasin: 'กาฬสินธุ์',
+	Mukdahan: 'มุกดาหาร',
+	Chaiyaphum: 'ชัยภูมิ',
+	'Maha Sarakham': 'มหาสารคาม',
+	'Roi Et': 'ร้อยเอ็ด',
+	Yasothon: 'ยโสธร',
+	'Amnat Charoen': 'อำนาจเจริญ',
+	'Nakhon Ratchasima': 'นครราชสีมา',
+	'Buri Ram': 'บุรีรัมย์',
+	Surin: 'สุรินทร์',
+	'Si Sa Ket': 'ศรีสะเกษ',
+	'Ubon Ratchathani': 'อุบลราชธานี',
+	Sukhothai: 'สุโขทัย',
+	Phitsanulok: 'พิษณุโลก',
+	'Kamphaeng Phet': 'กำแพงเพชร',
+	Phichit: 'พิจิตร',
+	Phetchabun: 'เพชรบูรณ์',
+	'Nakhon Sawan': 'นครสวรรค์',
+	'Uthai Thani': 'อุทัยธานี',
+	'Chai Nat': 'ชัยนาท',
+	'Sing Buri': 'สิงห์บุรี',
+	'Lop Buri': 'ลพบุรี',
+	'Suphan Buri': 'สุพรรณบุรี',
+	'Ang Thong': 'อ่างทอง',
+	Saraburi: 'สระบุรี',
+	'Phra Nakhon Si Ayutthaya': 'พระนครศรีอยุธยา',
+	'Nakhon Pathom': 'นครปฐม',
+	'Pathum Thani': 'ปทุมธานี',
+	Nonthaburi: 'นนทบุรี',
+	'Nakhon Nayok': 'นครนายก',
+	Bangkok: 'กรุงเทพมหานคร',
+	'Samut Sakhon': 'สมุทรสาคร',
+	'Samut Prakan': 'สมุทรปราการ',
+	'Samut Songkhram': 'สมุทรสงคราม',
+	Tak: 'ตาก',
+	Kanchanaburi: 'กาญจนบุรี',
+	Ratchaburi: 'ราชบุรี',
+	Phetchaburi: 'เพชรบุรี',
+	'Prachuap Khiri Khan': 'ประจวบคีรีขันธ์',
+	'Prachin Buri': 'ปราจีนบุรี',
+	'Sa Kaeo': 'สระแก้ว',
+	Chachoengsao: 'ฉะเชิงเทรา',
+	'Chon Buri': 'ชลบุรี',
+	Rayong: 'ระยอง',
+	Chanthaburi: 'จันทบุรี',
+	Trat: 'ตราด',
+	Chumphon: 'ชุมพร',
+	Ranong: 'ระนอง',
+	'Surat Thani': 'สุราษฎร์ธานี',
+	'Phang Nga': 'พังงา',
+	Phuket: 'ภูเก็ต',
+	Krabi: 'กระบี่',
+	'Nakhon Si Thammarat': 'นครศรีธรรมราช',
+	Trang: 'ตรัง',
+	Phatthalung: 'พัทลุง',
+	Satun: 'สตูล',
+	Songkhla: 'สงขลา',
+	Pattani: 'ปัตตานี',
+	Yala: 'ยะลา',
+	Narathiwat: 'นราธิวาส',
+};
+
 const regionEntries = Object.entries(REGIONS).flatMap(([region, names]) =>
 	names.map((name) => [name, region]),
 );
@@ -134,7 +218,17 @@ for (const feature of source.features) {
 	const name = RENAME[feature.properties.NAME_1] ?? splitName(feature.properties.NAME_1);
 	const region = regionByName.get(name);
 	if (!region) throw new Error(`Province not in the region table: ${name}`);
-	feature.properties = { name, region };
+	const thai = THAI[name];
+	if (!thai) throw new Error(`Province not in the Thai-name table: ${name}`);
+	// GADM's NL_NAME_1 carries a จังหวัด ("province") prefix, and five entries
+	// are wrong outright (Bangkok is labeled Chiang Mai, Chaiyaphum is labeled
+	// Chai Nat, and three name their capital district instead) — so a mismatch
+	// only warns
+	const sourceThai = feature.properties.NL_NAME_1?.replace(/^จังหวัด/, '');
+	if (sourceThai && sourceThai !== 'NA' && sourceThai !== thai) {
+		console.warn(`Thai name differs from GADM for ${name}: ours ${thai}, NL_NAME_1 ${sourceThai}`);
+	}
+	feature.properties = { name, thai, region };
 }
 
 const names = new Set(source.features.map((f) => f.properties.name));

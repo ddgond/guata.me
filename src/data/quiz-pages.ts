@@ -70,6 +70,19 @@ export const quizPages: QuizPageDef[] = [
 		labelsToggle: true,
 	},
 	{
+		slug: 'thai-provinces-thai',
+		title: 'Thai Provinces in Thai',
+		section: 'subdivisions',
+		stats: '77 provinces · Thai-script prompts · by region or all of Thailand',
+		description:
+			'The same 77 provinces of Thailand, prompted by their Thai-script names to train ' +
+			'recognizing them on the map.',
+		intro: 'Prompts are the Thai names; use the hint to reveal the romanized name.',
+		quiz: 'thai-provinces-thai',
+		pickerLabel: 'Choose a region',
+		labelsToggle: true,
+	},
+	{
 		slug: 'belediyesi',
 		title: 'Turkish Belediyesi',
 		section: 'subdivisions',

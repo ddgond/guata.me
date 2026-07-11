@@ -4,8 +4,9 @@
 // scripts/area-code-data.mjs), the German Landkreise quiz
 // (/data/landkreise.json, regenerate with scripts/landkreis-data.mjs), and
 // the Japanese cities quiz (/data/japan-cities.json, regenerate with
-// scripts/japan-cities-data.mjs), the Thai provinces quiz
-// (/data/thai-provinces.json, regenerate with scripts/thai-provinces-data.mjs),
+// scripts/japan-cities-data.mjs), the two Thai provinces quizzes — romanized
+// and Thai-script — (both /data/thai-provinces.json, regenerate with
+// scripts/thai-provinces-data.mjs),
 // and the Turkish belediyesi quiz (/data/belediyesi.json, regenerate with
 // scripts/belediye-data.mjs). Importing this module registers them all.
 
@@ -392,6 +393,30 @@ const thaiProvinces: QuizDef = {
 	),
 };
 
+// Thai-script variant: same data and drills, but prompts are the Thai names,
+// with the hint revealing the RTGS form — the Japanese-cities arrangement.
+// Progress is tracked separately from the romanized quiz.
+const thaiProvincesThai: QuizDef = {
+	dataUrl: '/data/thai-provinces.json',
+	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
+	label: (f) => f.properties.thai,
+	prompts: (f) => [f.properties.thai],
+	hint: (_prompt, features) => features[0].properties.name,
+	tipHint: true,
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'thai-province-thai-progress',
+	skipConfirmKey: 'thai-province-thai-skip-toggle-confirm',
+	uiKey: () => 'thai-province-thai-ui',
+	share: share('thai-provinces-thai'),
+	...regionDrill(
+		'th',
+		THAI_PROVINCE_REGIONS,
+		'All Thailand',
+		(f, region) => f.properties.region === region,
+	),
+};
+
 // --- Turkish belediyesi ----------------------------------------------------
 
 // Province drills grouped into the seven standard geographic-region bands,
@@ -635,6 +660,7 @@ registerQuizzes({
 	landkreise,
 	'japan-cities': japanCities,
 	'thai-provinces': thaiProvinces,
+	'thai-provinces-thai': thaiProvincesThai,
 	belediyesi,
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
