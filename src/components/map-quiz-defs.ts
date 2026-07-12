@@ -386,8 +386,15 @@ const THAI_PROVINCE_REGIONS: Record<string, string> = {
 	south: 'South',
 };
 
+// The data files keep stable URLs across deploys and the host serves them
+// without cache-control, so browsers heuristically cache them and can hold a
+// stale copy for days. The abbreviations quiz needs the `abbr` property added
+// in v2, and a pre-v2 copy leaves it promptless (an instant 0/0 run) — bump
+// the version whenever a regeneration changes the properties the defs read.
+const THAI_PROVINCES_DATA = '/data/thai-provinces.json?v=2';
+
 const thaiProvinces: QuizDef = {
-	dataUrl: '/data/thai-provinces.json',
+	dataUrl: THAI_PROVINCES_DATA,
 	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
 	label: (f) => f.properties.name,
 	prompts: (f) => [f.properties.name],
@@ -409,7 +416,7 @@ const thaiProvinces: QuizDef = {
 // with the hint revealing the RTGS form — the Japanese-cities arrangement.
 // Progress is tracked separately from the romanized quiz.
 const thaiProvincesThai: QuizDef = {
-	dataUrl: '/data/thai-provinces.json',
+	dataUrl: THAI_PROVINCES_DATA,
 	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
 	label: (f) => f.properties.thai,
 	prompts: (f) => [f.properties.thai],
@@ -447,7 +454,7 @@ const thaiProvincesThai: QuizDef = {
 // the Thai name for explore-mode hovers and wrong-guess callouts; romanized
 // names are already on Google's tiles, so the in-quiz hint is what adds them.
 const thaiProvincesAbbr: QuizDef = {
-	dataUrl: '/data/thai-provinces.json',
+	dataUrl: THAI_PROVINCES_DATA,
 	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
 	label: (f) =>
 		f.properties.abbr ? `${f.properties.abbr} · ${f.properties.thai}` : f.properties.thai,
