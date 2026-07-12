@@ -10,13 +10,16 @@
 // can't key that table (GADM leaves it "NA" for Bueng Kan and Chanthaburi),
 // so it's keyed by NAME_1, which is unique.
 //
-// Each feature carries { name, thai, region }: `thai` is the Thai-script name
-// from the table below (checked against GADM's NL_NAME_1 where it has one),
-// for the Thai-script variant of the quiz, and region is one of the six
+// Each feature carries { name, thai, region, abbr }: `thai` is the Thai-script
+// name from the table below (checked against GADM's NL_NAME_1 where it has
+// one), for the Thai-script variant of the quiz, region is one of the six
 // standard geographic regions (the National Geographical Committee grouping):
-// North, Northeast (Isan), Central, West, East, South. The membership table
-// below lists every province by display name and doubles as the check that
-// the source still contains exactly the 77 provinces we expect.
+// North, Northeast (Isan), Central, West, East, South, and `abbr` is the
+// official two-letter abbreviation seen on kilometer markers — every province
+// except Bangkok, which the abbreviations quiz leaves unprompted. The
+// membership table below lists every province by display name and doubles as
+// the check that the source still contains exactly the 77 provinces we
+// expect.
 //
 // Usage: node scripts/thai-provinces-data.mjs
 
@@ -194,6 +197,88 @@ const THAI = {
 	Narathiwat: 'นราธิวาส',
 };
 
+// Official two-letter province abbreviations (the ones on kilometer markers),
+// keyed by display name. Bangkok is deliberately absent: markers around the
+// capital use กทม, and the quiz leaves it unprompted.
+const ABBR = {
+	'Mae Hong Son': 'มส',
+	'Chiang Rai': 'ชร',
+	'Chiang Mai': 'ชม',
+	Phayao: 'พย',
+	Nan: 'นน',
+	Lamphun: 'ลพ',
+	Lampang: 'ลป',
+	Phrae: 'พร',
+	Uttaradit: 'อต',
+	Loei: 'ลย',
+	'Nong Khai': 'นค',
+	'Bueng Kan': 'บก',
+	'Udon Thani': 'อด',
+	'Nong Bua Lam Phu': 'นภ',
+	'Sakon Nakhon': 'สน',
+	'Nakhon Phanom': 'นพ',
+	'Khon Kaen': 'ขก',
+	Kalasin: 'กส',
+	Mukdahan: 'มห',
+	Chaiyaphum: 'ชย',
+	'Maha Sarakham': 'มค',
+	'Roi Et': 'รอ',
+	Yasothon: 'ยส',
+	'Amnat Charoen': 'อจ',
+	'Nakhon Ratchasima': 'นม',
+	'Buri Ram': 'บร',
+	Surin: 'สร',
+	'Si Sa Ket': 'ศก',
+	'Ubon Ratchathani': 'อบ',
+	Sukhothai: 'สท',
+	Phitsanulok: 'พล',
+	'Kamphaeng Phet': 'กพ',
+	Phichit: 'พจ',
+	Phetchabun: 'พช',
+	'Nakhon Sawan': 'นว',
+	'Uthai Thani': 'อน',
+	'Chai Nat': 'ชน',
+	'Sing Buri': 'สห',
+	'Lop Buri': 'ลบ',
+	'Suphan Buri': 'สพ',
+	'Ang Thong': 'อท',
+	Saraburi: 'สบ',
+	'Phra Nakhon Si Ayutthaya': 'อย',
+	'Nakhon Pathom': 'นฐ',
+	'Pathum Thani': 'ปท',
+	Nonthaburi: 'นบ',
+	'Nakhon Nayok': 'นย',
+	'Samut Sakhon': 'สค',
+	'Samut Prakan': 'สป',
+	'Samut Songkhram': 'สส',
+	Tak: 'ตก',
+	Kanchanaburi: 'กจ',
+	Ratchaburi: 'รบ',
+	Phetchaburi: 'พบ',
+	'Prachuap Khiri Khan': 'ปข',
+	'Prachin Buri': 'ปจ',
+	'Sa Kaeo': 'สก',
+	Chachoengsao: 'ฉช',
+	'Chon Buri': 'ชบ',
+	Rayong: 'รย',
+	Chanthaburi: 'จบ',
+	Trat: 'ตร',
+	Chumphon: 'ชพ',
+	Ranong: 'รน',
+	'Surat Thani': 'สฎ',
+	'Phang Nga': 'พง',
+	Phuket: 'ภก',
+	Krabi: 'กบ',
+	'Nakhon Si Thammarat': 'นศ',
+	Trang: 'ตง',
+	Phatthalung: 'พท',
+	Satun: 'สต',
+	Songkhla: 'สข',
+	Pattani: 'ปน',
+	Yala: 'ยล',
+	Narathiwat: 'นธ',
+};
+
 const regionEntries = Object.entries(REGIONS).flatMap(([region, names]) =>
 	names.map((name) => [name, region]),
 );
@@ -202,6 +287,11 @@ if (regionByName.size !== regionEntries.length) {
 	throw new Error('A province is listed in more than one region');
 }
 const EXPECTED_COUNT = regionByName.size;
+
+const abbrs = Object.values(ABBR);
+if (abbrs.length !== EXPECTED_COUNT - 1 || new Set(abbrs).size !== abbrs.length) {
+	throw new Error('Expected a unique abbreviation for every province but Bangkok');
+}
 
 const source = await fetchZippedJson(SOURCE);
 
@@ -220,6 +310,10 @@ for (const feature of source.features) {
 	if (!region) throw new Error(`Province not in the region table: ${name}`);
 	const thai = THAI[name];
 	if (!thai) throw new Error(`Province not in the Thai-name table: ${name}`);
+	const abbr = ABBR[name];
+	if (!abbr && name !== 'Bangkok') {
+		throw new Error(`Province not in the abbreviation table: ${name}`);
+	}
 	// GADM's NL_NAME_1 carries a จังหวัด ("province") prefix, and five entries
 	// are wrong outright (Bangkok is labeled Chiang Mai, Chaiyaphum is labeled
 	// Chai Nat, and three name their capital district instead) — so a mismatch
@@ -228,7 +322,7 @@ for (const feature of source.features) {
 	if (sourceThai && sourceThai !== 'NA' && sourceThai !== thai) {
 		console.warn(`Thai name differs from GADM for ${name}: ours ${thai}, NL_NAME_1 ${sourceThai}`);
 	}
-	feature.properties = { name, thai, region };
+	feature.properties = abbr ? { name, thai, region, abbr } : { name, thai, region };
 }
 
 const names = new Set(source.features.map((f) => f.properties.name));

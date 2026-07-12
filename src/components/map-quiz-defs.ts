@@ -4,9 +4,9 @@
 // scripts/area-code-data.mjs), the German Landkreise quiz
 // (/data/landkreise.json, regenerate with scripts/landkreis-data.mjs), and
 // the Japanese cities quiz (/data/japan-cities.json, regenerate with
-// scripts/japan-cities-data.mjs), the two Thai provinces quizzes — romanized
-// and Thai-script — (both /data/thai-provinces.json, regenerate with
-// scripts/thai-provinces-data.mjs),
+// scripts/japan-cities-data.mjs), the three Thai provinces quizzes —
+// romanized, Thai-script, and kilometer-marker abbreviations — (all
+// /data/thai-provinces.json, regenerate with scripts/thai-provinces-data.mjs),
 // and the Turkish belediyesi quiz (/data/belediyesi.json, regenerate with
 // scripts/belediye-data.mjs). Importing this module registers them all.
 
@@ -440,6 +440,33 @@ const thaiProvincesThai: QuizDef = {
 	),
 };
 
+// Abbreviations variant: same data and drills, prompted by the official
+// two-letter abbreviations from kilometer markers. Bangkok carries no `abbr`
+// (markers around the capital use กทม), so it draws on the map — and clicking
+// it is a miss — but is never asked. The label pairs the abbreviation with
+// the Thai name for explore-mode hovers and wrong-guess callouts; romanized
+// names are already on Google's tiles, so the in-quiz hint is what adds them.
+const thaiProvincesAbbr: QuizDef = {
+	dataUrl: '/data/thai-provinces.json',
+	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
+	label: (f) =>
+		f.properties.abbr ? `${f.properties.abbr} · ${f.properties.thai}` : f.properties.thai,
+	prompts: (f) => (f.properties.abbr ? [f.properties.abbr] : []),
+	hint: (_prompt, features) => `${features[0].properties.thai} · ${features[0].properties.name}`,
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'thai-province-abbr-progress',
+	skipConfirmKey: 'thai-province-abbr-skip-toggle-confirm',
+	uiKey: () => 'thai-province-abbr-ui',
+	share: share('thai-provinces-abbreviations'),
+	...regionDrill(
+		'th',
+		THAI_PROVINCE_REGIONS,
+		'All Thailand',
+		(f, region) => f.properties.region === region,
+	),
+};
+
 // --- Turkish belediyesi ----------------------------------------------------
 
 // Province drills grouped into the seven standard geographic-region bands,
@@ -684,6 +711,7 @@ registerQuizzes({
 	'japan-cities': japanCities,
 	'thai-provinces': thaiProvinces,
 	'thai-provinces-thai': thaiProvincesThai,
+	'thai-provinces-abbreviations': thaiProvincesAbbr,
 	belediyesi,
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),

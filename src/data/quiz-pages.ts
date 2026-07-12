@@ -78,11 +78,24 @@ export const quizPages: QuizPageDef[] = [
 		description:
 			'The same 77 provinces of Thailand, prompted by their Thai-script names to train ' +
 			'recognizing them on the map.',
-		intro: 'Prompts are the Thai names; use the hint to reveal the romanized name.',
+		intro: studyPost('these'),
 		quiz: 'thai-provinces-thai',
 		pickerLabel: 'Choose a region',
 		labelsToggle: true,
 		fontPicker: true,
+	},
+	{
+		slug: 'thai-provinces-abbreviations',
+		title: 'Thai Province Abbreviations',
+		section: 'subdivisions',
+		stats: '76 abbreviations · by region or all of Thailand',
+		description:
+			"Every province's two-letter abbreviation, as painted on the kilometer markers " +
+			'along Thai roads.',
+		intro: 'All 76 non-Bangkok provinces of Thailand, as seen abbreviated on kilometer markers.',
+		quiz: 'thai-provinces-abbreviations',
+		pickerLabel: 'Choose a region',
+		labelsToggle: true,
 	},
 	{
 		slug: 'belediyesi',
