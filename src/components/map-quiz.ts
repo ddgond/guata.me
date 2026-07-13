@@ -553,7 +553,7 @@ class MapQuiz extends HTMLElement {
 		this.geoLayer?.remove();
 		this.layers = [];
 		this.geoLayer = L.geoJSON(features, {
-			style: () => this.styleFor(null!),
+			style: (feature) => this.styleFor(feature as QuizFeature),
 			onEachFeature: (feature: QuizFeature, layer) => {
 				const path = layer as L.Path;
 				this.layers.push({ layer: path, feature });
