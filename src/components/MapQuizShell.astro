@@ -12,6 +12,8 @@
 //                part of the drill)
 // fontPicker   — render the Font picker (quizzes whose definition lists
 //                typeface choices for the prompted names)
+// find         — render the Find input (area-code quizzes: wildcard-highlight
+//                matching codes while exploring the map)
 
 interface Props {
 	quiz: string;
@@ -20,9 +22,18 @@ interface Props {
 	pickerLabel?: string;
 	labelsToggle?: boolean;
 	fontPicker?: boolean;
+	find?: boolean;
 }
 
-const { quiz, scope, initial, pickerLabel, labelsToggle = false, fontPicker = false } = Astro.props;
+const {
+	quiz,
+	scope,
+	initial,
+	pickerLabel,
+	labelsToggle = false,
+	fontPicker = false,
+	find = false,
+} = Astro.props;
 ---
 
 <map-quiz data-quiz={quiz} data-scope={scope} data-initial={initial}>
@@ -81,6 +92,14 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false, fontPicker = fa
 				<label>
 					Font:
 					<select class="font-picker">{null}</select>
+				</label>
+			)
+		}
+		{
+			find && (
+				<label>
+					Find:
+					<input class="find" type="text" placeholder="9**" autocomplete="off" spellcheck="false" />
 				</label>
 			)
 		}
@@ -184,6 +203,7 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false, fontPicker = fa
 	}
 	.picker,
 	.font-picker,
+	.find,
 	.start,
 	.progress-btn,
 	.dialog-actions button,
@@ -201,6 +221,10 @@ const { quiz, scope, initial, pickerLabel, labelsToggle = false, fontPicker = fa
 		margin-left: auto;
 		cursor: pointer;
 		white-space: nowrap;
+	}
+	/* Wide enough for the longest codes plus a wildcard or two */
+	.find {
+		width: 6ch;
 	}
 	/* The skip and share buttons are created from the script, so they need
 	   :global() */

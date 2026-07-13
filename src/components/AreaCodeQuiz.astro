@@ -10,7 +10,9 @@
 // clicking any shape that carries the asked code counts. Japan and Brazil
 // quiz the whole country; the US gets a picker of multi-state regions plus
 // an All United States entry. Each prompt offers an on-demand Dominic System
-// hint, read from the reader's saved list (defaulting to Dan's).
+// hint, read from the reader's saved list (defaulting to Dan's). Outside quiz
+// runs, the Find input highlights the codes matching a wildcard pattern
+// (9**, 94*, *43 — x/X/* each stand for one digit).
 
 import MapQuizShell from './MapQuizShell.astro';
 
@@ -22,4 +24,4 @@ const { country } = Astro.props;
 const quiz = { japan: 'area-jp', brazil: 'area-br', usa: 'area-us' }[country];
 ---
 
-<MapQuizShell quiz={quiz} pickerLabel={country === 'usa' ? 'Choose a region' : undefined} />
+<MapQuizShell quiz={quiz} pickerLabel={country === 'usa' ? 'Choose a region' : undefined} find />

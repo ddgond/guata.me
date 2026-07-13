@@ -167,6 +167,8 @@ class MapQuiz extends HTMLElement {
 	labelsBox: HTMLInputElement | null = null;
 	picker: HTMLSelectElement | null = null;
 	fontPicker: HTMLSelectElement | null = null;
+	findInput: HTMLInputElement | null = null;
+	findPattern = '';
 	nameTip!: HTMLElement;
 	progressOverlay!: HTMLElement;
 	confirmOverlay!: HTMLElement;
@@ -322,6 +324,18 @@ class MapQuiz extends HTMLElement {
 				this.persistUI();
 			});
 			this.applyFont();
+		}
+
+		const findInput = (this.findInput = this.querySelector<HTMLInputElement>('.find'));
+		if (findInput) {
+			// Live wildcard highlight while exploring; characters outside the
+			// pattern alphabet (digits and the wildcards) are dropped as typed
+			findInput.addEventListener('input', () => {
+				const clean = findInput.value.replace(/[^0-9xX*]/g, '');
+				if (clean !== findInput.value) findInput.value = clean;
+				this.findPattern = clean;
+				this.restyleAll();
+			});
 		}
 
 		this.startButton.addEventListener('click', () => {
@@ -556,9 +570,27 @@ class MapQuiz extends HTMLElement {
 
 	// --- styling ---------------------------------------------------------
 
+	// Wildcard prefix match for the Find input: *, x, and X each stand for one
+	// digit, and the pattern anchors at the start of the code — "9" is every
+	// code starting with 9, "*4" any code whose second digit is 4. A pattern
+	// longer than the code can't match it. Overlay shapes match on any of
+	// their codes.
+	matchesFind(feature: QuizFeature) {
+		return this.def
+			.prompts(feature)
+			.some(
+				(code) =>
+					code.length >= this.findPattern.length &&
+					[...this.findPattern].every((ch, i) => '*xX'.includes(ch) || code[i] === ch),
+			);
+	}
+
 	styleFor(feature: QuizFeature, flash: string | null = null): L.PathOptions {
 		const borders = this.bordersBox.checked;
-		const tint = flash ?? this.review.get(feature) ?? null;
+		// An active Find pattern beats the post-run review tints (the input is
+		// cleared while a quiz is running, so it never competes with the quiz)
+		const find = this.findPattern && this.matchesFind(feature) ? 'gold' : null;
+		const tint = flash ?? find ?? this.review.get(feature) ?? null;
 		return {
 			color: STROKE,
 			weight: 1.2,
@@ -650,6 +682,11 @@ class MapQuiz extends HTMLElement {
 		this.review.clear();
 		this.completed = 0;
 		this.revealed = null;
+		if (this.findInput) {
+			this.findInput.value = '';
+			this.findPattern = '';
+			this.findInput.closest('label')!.hidden = true;
+		}
 		this.nameTip.hidden = true;
 		this.startButton.textContent = 'End Quiz';
 		this.restyleAll();
@@ -668,6 +705,7 @@ class MapQuiz extends HTMLElement {
 		this.mode = 'explore';
 		this.current = null;
 		this.revealed = null;
+		if (this.findInput) this.findInput.closest('label')!.hidden = false;
 		this.startButton.textContent = 'Start Quiz';
 		if (this.layers.length) this.restyleAll();
 		if (!silent) this.status.textContent = '';

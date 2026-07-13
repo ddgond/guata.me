@@ -19,6 +19,7 @@ export type QuizPageDef = {
 	pickerLabel?: string;
 	labelsToggle?: boolean;
 	fontPicker?: boolean;
+	find?: boolean;
 };
 
 const studyPost = (subject: string) =>
@@ -133,6 +134,7 @@ export const quizPages: QuizPageDef[] = [
 		intro: areaCodeLinks,
 		quiz: 'area-us',
 		pickerLabel: 'Choose a region',
+		find: true,
 	},
 	{
 		slug: 'area-codes-jp',
@@ -142,6 +144,7 @@ export const quizPages: QuizPageDef[] = [
 		description: 'All Japanese area codes.',
 		intro: areaCodeLinks,
 		quiz: 'area-jp',
+		find: true,
 	},
 	{
 		slug: 'area-codes-br',
@@ -151,5 +154,6 @@ export const quizPages: QuizPageDef[] = [
 		description: 'All Brazilian area codes.',
 		intro: areaCodeLinks,
 		quiz: 'area-br',
+		find: true,
 	},
 ];
