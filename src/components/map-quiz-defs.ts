@@ -253,7 +253,7 @@ const kabupaten: QuizDef = {
 // --- German Landkreise ---------------------------------------------------
 
 // Labels for the region keys scripts/landkreis-data.mjs writes into the data:
-// Bundesländer with the city-states and smallest states folded into a
+// Bundesländer with the city-states and Mecklenburg-Vorpommern folded into a
 // neighbor, Bayern split at the Franken/Oberpfalz line, and
 // Nordrhein-Westfalen split at the Landschaftsverband line, swept roughly
 // north-to-south
@@ -267,7 +267,8 @@ const LANDKREIS_REGIONS: Record<string, string> = {
 	westfalen: 'Westfalen-Lippe',
 	rheinland: 'Rheinland',
 	hessen: 'Hessen',
-	'rlp-saarland': 'Rheinland-Pfalz & Saarland',
+	'rheinland-pfalz': 'Rheinland-Pfalz',
+	saarland: 'Saarland',
 	bw: 'Baden-Württemberg',
 	nordbayern: 'Nordbayern (Franken & Oberpfalz)',
 	suedbayern: 'Südbayern',
@@ -284,7 +285,7 @@ const LANDKREIS_BANDS: Record<string, { label: string; regions: string[] }> = {
 	},
 	central: {
 		label: 'Central Germany',
-		regions: ['thueringen', 'westfalen', 'rheinland', 'hessen', 'rlp-saarland'],
+		regions: ['thueringen', 'westfalen', 'rheinland', 'hessen', 'rheinland-pfalz', 'saarland'],
 	},
 	south: {
 		label: 'South Germany',
@@ -293,7 +294,7 @@ const LANDKREIS_BANDS: Record<string, { label: string; regions: string[] }> = {
 };
 
 const landkreise: QuizDef = {
-	dataUrl: '/data/landkreise.json',
+	dataUrl: '/data/landkreise.json?v=2',
 	attribution: 'Imagery © Google · Boundaries © <a href="https://gadm.org">GADM</a>',
 	label: (f) => f.properties.name,
 	prompts: (f) => [f.properties.name],

@@ -14,9 +14,9 @@
 // keyed by CC_2 — the official five-digit Kreisschlüssel. Geometry is
 // simplified with mapshaper so the whole file stays a few hundred KB.
 //
-// Each feature carries { name, region }, where region is one of the thirteen
+// Each feature carries { name, region }, where region is one of the fourteen
 // drill groups the quiz picker offers: Bundesländer, with the city-states and
-// the smallest states folded into a neighbor, Bayern split between Franken
+// Mecklenburg-Vorpommern folded into a neighbor, Bayern split between Franken
 // & Oberpfalz and the southern Bezirke, and Nordrhein-Westfalen split between
 // Rheinland and Westfalen-Lippe (the Kreisschlüssel's third digit is the
 // Regierungsbezirk, so 093xx–096xx is north Bayern and 051xx/053xx —
@@ -93,7 +93,7 @@ const RENAME = {
 };
 
 // Drill groups: Bundesländer with Hamburg, Mecklenburg-Vorpommern, Bremen,
-// Berlin, and Saarland folded into a neighbor, and Bayern and
+// and Berlin folded into a neighbor, and Bayern and
 // Nordrhein-Westfalen each split in half
 const STATE_REGIONS = {
 	'Schleswig-Holstein': 'north',
@@ -107,8 +107,8 @@ const STATE_REGIONS = {
 	Sachsen: 'sachsen',
 	Thüringen: 'thueringen',
 	Hessen: 'hessen',
-	'Rheinland-Pfalz': 'rlp-saarland',
-	Saarland: 'rlp-saarland',
+	'Rheinland-Pfalz': 'rheinland-pfalz',
+	Saarland: 'saarland',
 	'Baden-Württemberg': 'bw',
 };
 const NORTH_BAYERN_BEZIRKE = new Set(['093', '094', '095', '096']); // Oberpfalz + the three Franken
@@ -136,7 +136,8 @@ const EXPECTED_REGIONS = {
 	westfalen: 27,
 	rheinland: 26,
 	hessen: 25,
-	'rlp-saarland': 41,
+	'rheinland-pfalz': 35,
+	saarland: 6,
 	bw: 42,
 	nordbayern: 37,
 	suedbayern: 44,
