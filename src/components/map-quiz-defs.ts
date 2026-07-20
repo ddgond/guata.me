@@ -7,8 +7,11 @@
 // scripts/japan-cities-data.mjs), the three Thai provinces quizzes —
 // romanized, Thai-script, and kilometer-marker abbreviations — (all
 // /data/thai-provinces.json, regenerate with scripts/thai-provinces-data.mjs),
-// and the Turkish belediyesi quiz (/data/belediyesi.json, regenerate with
-// scripts/belediye-data.mjs). Importing this module registers them all.
+// the Turkish belediyesi quiz (/data/belediyesi.json, regenerate with
+// scripts/belediye-data.mjs), and the two Turkish provinces quizzes — names
+// and plate codes — (both /data/turkish-provinces.json, regenerate with
+// scripts/turkish-provinces-data.mjs). Importing this module registers them
+// all.
 
 import {
 	registerQuizzes,
@@ -713,6 +716,62 @@ const areaCodes = (
 	...overrides,
 });
 
+// --- Turkish provinces ------------------------------------------------------
+
+// Labels for the region keys scripts/turkish-provinces-data.mjs writes into
+// the data: the seven standard geographic regions, the same grouping (and
+// keys) the belediyesi bands use. At 8–18 provinces each, every region is a
+// single drill — no bands needed.
+const TURKISH_PROVINCE_REGIONS: Record<string, string> = Object.fromEntries(
+	Object.entries(BELEDIYE_BANDS).map(([key, band]) => [key, band.label]),
+);
+
+const turkishProvinces: QuizDef = {
+	dataUrl: '/data/turkish-provinces.json',
+	attribution:
+		'Imagery © Google · Boundaries © <a href="https://data.humdata.org/dataset/cod-ab-tur">OCHA COD-AB</a>',
+	label: (f) => f.properties.name,
+	prompts: (f) => [f.properties.name],
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'turkish-province-progress',
+	skipConfirmKey: 'turkish-province-skip-toggle-confirm',
+	uiKey: () => 'turkish-province-ui',
+	share: share('turkish-provinces'),
+	...regionDrill(
+		'tr',
+		TURKISH_PROVINCE_REGIONS,
+		'All Türkiye',
+		(f, region) => f.properties.region === region,
+	),
+};
+
+// Plate-codes variant: same data and drills, prompted by the two-digit
+// province codes (01 Adana … 81 Düzce) from license plates and road signs,
+// with the Dominic System hints of the area-code quizzes. The label pairs the
+// code with the province name for explore-mode hovers and wrong-guess
+// callouts. Progress is tracked separately from the names quiz.
+const turkishProvinceCodes: QuizDef = {
+	dataUrl: '/data/turkish-provinces.json',
+	attribution:
+		'Imagery © Google · Boundaries © <a href="https://data.humdata.org/dataset/cod-ab-tur">OCHA COD-AB</a>',
+	label: (f) => `${f.properties.code} · ${f.properties.name}`,
+	prompts: (f) => [f.properties.code],
+	hint: dominicHint,
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'turkish-province-code-progress',
+	skipConfirmKey: 'turkish-province-code-skip-toggle-confirm',
+	uiKey: () => 'turkish-province-code-ui',
+	share: share('turkish-province-codes'),
+	...regionDrill(
+		'tr',
+		TURKISH_PROVINCE_REGIONS,
+		'All Türkiye',
+		(f, region) => f.properties.region === region,
+	),
+};
+
 registerQuizzes({
 	kabupaten,
 	landkreise,
@@ -721,6 +780,8 @@ registerQuizzes({
 	'thai-provinces-thai': thaiProvincesThai,
 	'thai-provinces-abbreviations': thaiProvincesAbbr,
 	belediyesi,
+	'turkish-provinces': turkishProvinces,
+	'turkish-province-codes': turkishProvinceCodes,
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
 	'area-us': areaCodes('us', 'United States', {

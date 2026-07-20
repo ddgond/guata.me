@@ -89,6 +89,13 @@ names need the dotted/dotless-i restoration and rename table the script
 documents; every output name was verified against Turkish Wikipedia titles
 and the municipalities' own .bel.tr spellings.
 
+### Turkish provinces (`turkish-provinces-data.mjs`)
+
+The admin-1 layer of the same COD-AB archive: 81 provinces with the same
+wrong-locale lowercasing (only Eskişehir needs a rename). The `adm1_pcode`s
+follow the license-plate numbering exactly (TUR001 Adana … TUR081 Düzce), so
+the plate-code quiz's codes are read straight from them.
+
 ## Sources for future quizzes
 
 - **Subdivisions**: GADM 4.1 directly

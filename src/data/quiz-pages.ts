@@ -99,6 +99,31 @@ export const quizPages: QuizPageDef[] = [
 		labelsToggle: true,
 	},
 	{
+		slug: 'turkish-provinces',
+		title: 'Turkish Provinces',
+		section: 'subdivisions',
+		stats: '81 provinces · by region or all of Türkiye',
+		description:
+			"All 81 provinces of Türkiye, grouped into regions so you don't have to learn them all " +
+			'at once.',
+		intro: studyPost('these'),
+		quiz: 'turkish-provinces',
+		pickerLabel: 'Choose a region',
+		labelsToggle: true,
+	},
+	{
+		slug: 'turkish-province-codes',
+		title: 'Turkish Province Codes',
+		section: 'subdivisions',
+		stats: '81 codes · by region or all of Türkiye',
+		description:
+			"Every province's two-digit code, as seen on Turkish license plates and road signs.",
+		intro: areaCodeLinks,
+		quiz: 'turkish-province-codes',
+		pickerLabel: 'Choose a region',
+		labelsToggle: true,
+	},
+	{
 		slug: 'belediyesi',
 		title: 'Turkish Belediyesi',
 		section: 'subdivisions',
