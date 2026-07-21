@@ -137,6 +137,19 @@ export const quizPages: QuizPageDef[] = [
 		labelsToggle: true,
 	},
 	{
+		slug: 'vietnam-pre-reform-provinces',
+		title: 'Vietnam Pre-Reform Provinces',
+		section: 'subdivisions',
+		stats: '63 provinces · by region or all of Vietnam',
+		description:
+			'All 63 provinces of Vietnam as they stood before the 2025 mergers, grouped into ' +
+			"regions so you don't have to learn them all at once.",
+		intro: studyPost('these'),
+		quiz: 'vietnam-pre-reform-provinces',
+		pickerLabel: 'Choose a region',
+		labelsToggle: true,
+	},
+	{
 		slug: 'japan-cities',
 		title: 'Japanese Cities',
 		section: 'cities',

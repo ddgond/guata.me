@@ -8,10 +8,12 @@
 // romanized, Thai-script, and kilometer-marker abbreviations — (all
 // /data/thai-provinces.json, regenerate with scripts/thai-provinces-data.mjs),
 // the Turkish belediyesi quiz (/data/belediyesi.json, regenerate with
-// scripts/belediye-data.mjs), and the two Turkish provinces quizzes — names
+// scripts/belediye-data.mjs), the two Turkish provinces quizzes — names
 // and plate codes — (both /data/turkish-provinces.json, regenerate with
-// scripts/turkish-provinces-data.mjs). Importing this module registers them
-// all.
+// scripts/turkish-provinces-data.mjs), and the Vietnam pre-reform provinces
+// quiz (/data/vietnam-pre-reform-provinces.json, regenerate with
+// scripts/vietnam-pre-reform-provinces-data.mjs). Importing this module
+// registers them all.
 
 import {
 	registerQuizzes,
@@ -772,6 +774,44 @@ const turkishProvinceCodes: QuizDef = {
 	),
 };
 
+// --- Vietnam pre-reform provinces -------------------------------------------
+
+// Labels for the region keys scripts/vietnam-pre-reform-provinces-data.mjs
+// writes into the data: the eight standard geographic regions, swept roughly
+// north to south. At 5–13 provinces each, every region is a single drill —
+// no bands needed. Google's tiles show today's post-reform 34 provinces, so
+// labels mode is a contrast view, not a crib sheet.
+const VIETNAM_PROVINCE_REGIONS: Record<string, string> = {
+	northwest: 'Northwest',
+	northeast: 'Northeast',
+	'red-river': 'Red River Delta',
+	'north-central': 'North Central Coast',
+	'south-central': 'South Central Coast',
+	highlands: 'Central Highlands',
+	southeast: 'Southeast',
+	mekong: 'Mekong Delta',
+};
+
+const vietnamPreReformProvinces: QuizDef = {
+	dataUrl: '/data/vietnam-pre-reform-provinces.json',
+	attribution:
+		'Imagery © Google · Boundaries © <a href="https://www.geoboundaries.org">geoBoundaries</a>',
+	label: (f) => f.properties.name,
+	prompts: (f) => [f.properties.name],
+	labelsToggle: true,
+	modes: ['borders', 'neither', 'labels'],
+	progressKey: 'vietnam-pre-reform-province-progress',
+	skipConfirmKey: 'vietnam-pre-reform-province-skip-toggle-confirm',
+	uiKey: () => 'vietnam-pre-reform-province-ui',
+	share: share('vietnam-pre-reform-provinces'),
+	...regionDrill(
+		'vn',
+		VIETNAM_PROVINCE_REGIONS,
+		'All Vietnam',
+		(f, region) => f.properties.region === region,
+	),
+};
+
 registerQuizzes({
 	kabupaten,
 	landkreise,
@@ -782,6 +822,7 @@ registerQuizzes({
 	belediyesi,
 	'turkish-provinces': turkishProvinces,
 	'turkish-province-codes': turkishProvinceCodes,
+	'vietnam-pre-reform-provinces': vietnamPreReformProvinces,
 	'area-jp': areaCodes('jp', 'Japan', {}),
 	'area-br': areaCodes('br', 'Brazil', {}),
 	'area-us': areaCodes('us', 'United States', {

@@ -96,6 +96,18 @@ wrong-locale lowercasing (only Eskişehir needs a rename). The `adm1_pcode`s
 follow the license-plate numbering exactly (TUR001 Adana … TUR081 Düzce), so
 the plate-code quiz's codes are read straight from them.
 
+### Vietnam pre-reform provinces (`vietnam-pre-reform-provinces-data.mjs`)
+
+Built from a gist copy of geoBoundaries' Vietnam ADM1 layer
+(`gist.githubusercontent.com/wayfu/448f9731a1c6e20efbe2de57b4836fce`, CC BY
+4.0), pinned to commit `17e212d` so the bytes can't drift: the 63 provinces
+and municipalities as they stood before the 2025 reform (the January 2025
+Huế conversion and the June 2025 mergers down to 34). A historical copy is
+the point — geoboundaries.org itself now serves the post-reform 34-unit
+layer, so the gist has no live counterpart to migrate to. Names are the
+gist's `shapeName` values untouched (full diacritics; "Ho Chi Minh" is the
+source's one undiacritic'd name).
+
 ## Sources for future quizzes
 
 - **Subdivisions**: GADM 4.1 directly
