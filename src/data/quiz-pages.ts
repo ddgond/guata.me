@@ -39,7 +39,9 @@ export const quizPages: QuizPageDef[] = [
 		description:
 			'377 districts (cities merged with their parents to avoid redundancy), grouped into ' +
 			"manageable region sizes so you don't have to learn them all at once.",
-		intro: studyPost('subdivisions'),
+		intro:
+			studyPost('subdivisions') +
+			' The full-country version is also <a href="https://helloquiz.app/quiz/HJAC7XrKs8JZ">on helloquiz</a>.',
 		quiz: 'landkreise',
 		pickerLabel: 'Choose a region',
 		labelsToggle: true,
