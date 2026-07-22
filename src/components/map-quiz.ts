@@ -40,6 +40,12 @@ export type QuizDef = {
 	/** Append the hint to tooltips while browsing the map before a quiz run */
 	tipHint?: boolean;
 	/**
+	 * Custom matcher for the Find input, given the input's value as typed.
+	 * Without it the input accepts digit wildcard patterns matched against the
+	 * prompts — the area-code behavior (see matchesFind).
+	 */
+	findMatch?(feature: QuizFeature, query: string): boolean;
+	/**
 	 * Typeface choices for the Font picker (quizzes whose prompts train script
 	 * recognition, where reading unfamiliar typefaces is part of the drill).
 	 * The chosen face applies everywhere the quiz renders a shape name: the
@@ -328,12 +334,16 @@ class MapQuiz extends HTMLElement {
 
 		const findInput = (this.findInput = this.querySelector<HTMLInputElement>('.find'));
 		if (findInput) {
-			// Live wildcard highlight while exploring; characters outside the
-			// pattern alphabet (digits and the wildcards) are dropped as typed
+			// Live match highlight while exploring. With the default code
+			// matcher, characters outside the pattern alphabet (digits and the
+			// wildcards) are dropped as typed; a findMatch definition takes the
+			// value as-is
 			findInput.addEventListener('input', () => {
-				const clean = findInput.value.replace(/[^0-9xX*]/g, '');
-				if (clean !== findInput.value) findInput.value = clean;
-				this.findPattern = clean;
+				if (!this.def.findMatch) {
+					const clean = findInput.value.replace(/[^0-9xX*]/g, '');
+					if (clean !== findInput.value) findInput.value = clean;
+				}
+				this.findPattern = findInput.value;
 				this.restyleAll();
 			});
 		}
@@ -570,12 +580,13 @@ class MapQuiz extends HTMLElement {
 
 	// --- styling ---------------------------------------------------------
 
-	// Wildcard prefix match for the Find input: *, x, and X each stand for one
-	// digit, and the pattern anchors at the start of the code — "9" is every
-	// code starting with 9, "*4" any code whose second digit is 4. A pattern
-	// longer than the code can't match it. Overlay shapes match on any of
-	// their codes.
+	// Find-input matching. A definition's findMatch hook wins; the default is
+	// a wildcard prefix match: *, x, and X each stand for one digit, and the
+	// pattern anchors at the start of the code — "9" is every code starting
+	// with 9, "*4" any code whose second digit is 4. A pattern longer than
+	// the code can't match it. Overlay shapes match on any of their codes.
 	matchesFind(feature: QuizFeature) {
+		if (this.def.findMatch) return this.def.findMatch(feature, this.findPattern);
 		return this.def
 			.prompts(feature)
 			.some(

@@ -363,6 +363,14 @@ const japanCities: QuizDef = {
 	prompts: (f) => [f.properties.name],
 	hint: (_prompt, features) => features[0].properties.romaji,
 	tipHint: true,
+	// Find matches a case-insensitive substring of either name form: "sapp"
+	// finds Sapporo, "札幌" finds 札幌市. NFKC folds full-width Latin typed
+	// through an IME into its ASCII form.
+	findMatch: (f, query) => {
+		const q = query.normalize('NFKC').toLowerCase().trim();
+		if (!q) return false;
+		return f.properties.romaji.toLowerCase().includes(q) || f.properties.name.includes(q);
+	},
 	labelsToggle: true,
 	modes: ['borders', 'neither', 'labels'],
 	progressKey: 'japan-city-progress',

@@ -12,8 +12,10 @@
 //                part of the drill)
 // fontPicker   — render the Font picker (quizzes whose definition lists
 //                typeface choices for the prompted names)
-// find         — render the Find input (area-code quizzes: wildcard-highlight
-//                matching codes while exploring the map)
+// find         — render the Find input (highlight matching shapes while
+//                exploring the map; the definition's findMatch hook decides
+//                what matches, defaulting to area-code wildcard patterns)
+// findPlaceholder — example text shown in the empty Find input
 
 interface Props {
 	quiz: string;
@@ -23,6 +25,7 @@ interface Props {
 	labelsToggle?: boolean;
 	fontPicker?: boolean;
 	find?: boolean;
+	findPlaceholder?: string;
 }
 
 const {
@@ -33,7 +36,16 @@ const {
 	labelsToggle = false,
 	fontPicker = false,
 	find = false,
+	findPlaceholder = '9**',
 } = Astro.props;
+
+// The Find input is sized to its placeholder (never narrower than the
+// area-code default), with CJK glyphs counted double — they render about
+// two columns wide, so "札幌" needs ~4ch, not 2
+const findWidth = Math.max(
+	6,
+	[...findPlaceholder].reduce((width, ch) => width + (ch.charCodeAt(0) > 0x2e7f ? 2 : 1), 1),
+);
 ---
 
 <map-quiz data-quiz={quiz} data-scope={scope} data-initial={initial}>
@@ -99,7 +111,14 @@ const {
 			find && (
 				<label>
 					Find:
-					<input class="find" type="text" placeholder="9**" autocomplete="off" spellcheck="false" />
+					<input
+						class="find"
+						type="text"
+						placeholder={findPlaceholder}
+						style={`width: ${findWidth}ch`}
+						autocomplete="off"
+						spellcheck="false"
+					/>
 				</label>
 			)
 		}
@@ -221,10 +240,6 @@ const {
 		margin-left: auto;
 		cursor: pointer;
 		white-space: nowrap;
-	}
-	/* Wide enough for the longest codes plus a wildcard or two */
-	.find {
-		width: 6ch;
 	}
 	/* The skip and share buttons are created from the script, so they need
 	   :global() */

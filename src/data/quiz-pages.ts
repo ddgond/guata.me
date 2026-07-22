@@ -20,6 +20,7 @@ export type QuizPageDef = {
 	labelsToggle?: boolean;
 	fontPicker?: boolean;
 	find?: boolean;
+	findPlaceholder?: string;
 };
 
 const studyPost = (subject: string) =>
@@ -163,6 +164,8 @@ export const quizPages: QuizPageDef[] = [
 		quiz: 'japan-cities',
 		pickerLabel: 'Choose a region',
 		labelsToggle: true,
+		find: true,
+		findPlaceholder: 'Sapporo / 札幌',
 	},
 	{
 		slug: 'area-codes-us',
