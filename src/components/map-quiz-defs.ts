@@ -786,8 +786,7 @@ const turkishProvinceCodes: QuizDef = {
 
 // Labels for the region keys scripts/vietnam-pre-reform-provinces-data.mjs
 // writes into the data: the eight standard geographic regions, swept roughly
-// north to south. At 5–13 provinces each, every region is a single drill —
-// no bands needed. Google's tiles show today's post-reform 34 provinces, so
+// north to south. Google's tiles show today's post-reform 34 provinces, so
 // labels mode is a contrast view, not a crib sheet.
 const VIETNAM_PROVINCE_REGIONS: Record<string, string> = {
 	northwest: 'Northwest',
@@ -798,6 +797,24 @@ const VIETNAM_PROVINCE_REGIONS: Record<string, string> = {
 	highlands: 'Central Highlands',
 	southeast: 'Southeast',
 	mekong: 'Mekong Delta',
+};
+
+// Playable bands down the country between the regions and all-Vietnam tiers,
+// sized 25/19/19 provinces: the conventional three-way Bắc/Trung/Nam split,
+// with both coasts and the Central Highlands together in Central.
+const VIETNAM_PROVINCE_BANDS: Record<string, { label: string; regions: string[] }> = {
+	north: {
+		label: 'North Vietnam',
+		regions: ['northwest', 'northeast', 'red-river'],
+	},
+	central: {
+		label: 'Central Vietnam',
+		regions: ['north-central', 'south-central', 'highlands'],
+	},
+	south: {
+		label: 'South Vietnam',
+		regions: ['southeast', 'mekong'],
+	},
 };
 
 const vietnamPreReformProvinces: QuizDef = {
@@ -817,6 +834,7 @@ const vietnamPreReformProvinces: QuizDef = {
 		VIETNAM_PROVINCE_REGIONS,
 		'All Vietnam',
 		(f, region) => f.properties.region === region,
+		VIETNAM_PROVINCE_BANDS,
 	),
 };
 
