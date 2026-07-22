@@ -83,7 +83,6 @@ const findWidth = Math.max(
 					</svg>
 				</button>
 			</span>
-			<button class="start" disabled>Start Quiz</button>
 			<button class="hf-btn" aria-label="Hands-free mode" title="Hands-free mode" disabled>
 				<svg viewBox="0 0 16 16" aria-hidden="true">
 					<path
@@ -108,6 +107,7 @@ const findWidth = Math.max(
 						stroke-linejoin="round"></path>
 				</svg>
 			</button>
+			<button class="start" disabled>Start Quiz</button>
 		</div>
 	</div>
 	<div class="bar status" aria-live="polite">loading map…</div>
@@ -315,11 +315,12 @@ const findWidth = Math.max(
 		cursor: pointer;
 		white-space: nowrap;
 	}
-	/* Start/Hands-Free on the right of the top bar; the transport trio swaps
-	   in for them while hands-free plays, so only one group is ever visible */
+	/* Hands-Free/Start on the right of the top bar; the transport trio swaps
+	   in for them while hands-free runs, so only one group is ever visible.
+	   Stretch so the icon buttons match Start Quiz's height exactly. */
 	.top-actions {
 		display: flex;
-		align-items: center;
+		align-items: stretch;
 		gap: 0.5rem;
 		margin-left: auto;
 	}
@@ -335,7 +336,7 @@ const findWidth = Math.max(
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0.28em 0.45em;
+		padding: 0.2em 0.45em;
 		background: none;
 		border: 1px solid var(--line);
 		border-radius: 6px;

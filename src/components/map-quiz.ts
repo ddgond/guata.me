@@ -234,6 +234,9 @@ class MapQuiz extends HTMLElement {
 	hfItems: Item[] = [];
 	hfItem: Item | null = null;
 	hfLayer: L.GeoJSON | null = null;
+	// Every scoped shape's outline, kept on the map for the whole session and
+	// faded in/out with the reveal so neighbors give the answer context
+	hfBorders: L.GeoJSON | null = null;
 	hfTarget: L.LatLngBounds | null = null;
 	hfPaused = false;
 	hfTimer: number | null = null;
@@ -394,9 +397,16 @@ class MapQuiz extends HTMLElement {
 		for (const stepper of this.querySelectorAll<HTMLElement>('.hf-stepper'))
 			this.wireStepper(stepper);
 		this.hfButton.addEventListener('click', () => this.startHandsFree());
-		this.pauseButton.addEventListener('click', () =>
-			this.hfPaused ? this.hfResume() : this.hfPause(),
-		);
+		this.pauseButton.addEventListener('click', () => {
+			if (!this.hfPaused) this.hfPause();
+			else if (this.hfStep) this.hfResume();
+			else {
+				// First Play after entering hands-free: the armed state exists so
+				// the durations can be adjusted before the loop starts
+				this.hfSetPaused(false);
+				this.hfNext();
+			}
+		});
 		this.querySelector('.hf-skip')!.addEventListener('click', () => this.hfSkip());
 		this.querySelector('.hf-stop')!.addEventListener('click', () => this.stopHandsFree());
 
@@ -964,8 +974,18 @@ class MapQuiz extends HTMLElement {
 		this.hfControls.hidden = false;
 		this.bordersBox.closest('label')!.hidden = true;
 		if (this.labelsBox) this.labelsBox.closest('label')!.hidden = true;
+		this.hfBorders = L.geoJSON(
+			this.layers.map((entry) => entry.feature),
+			{
+				interactive: false,
+				style: { color: STROKE, weight: 1.2, opacity: 0.9, fill: false, className: 'hf-reveal' },
+			},
+		).addTo(this.map);
 		this.map.fitBounds(this.homeBounds!);
-		this.hfNext();
+		// Armed, not playing: the loop waits for Play so the durations can be
+		// tweaked first
+		this.hfStep = null;
+		this.hfSetPaused(true);
 	}
 
 	// rebuilding is setScope tearing things down before it refits the new
@@ -976,10 +996,13 @@ class MapQuiz extends HTMLElement {
 		if (this.hfTimer !== null) clearTimeout(this.hfTimer);
 		this.hfTimer = null;
 		this.hfItem = null;
+		this.hfStep = null;
 		this.hfSetPaused(false);
 		this.map.stop();
 		this.hfLayer?.remove();
 		this.hfLayer = null;
+		this.hfBorders?.remove();
+		this.hfBorders = null;
 		this.hfTransport.hidden = true;
 		this.hfControls.hidden = true;
 		this.startButton.hidden = false;
@@ -1036,11 +1059,13 @@ class MapQuiz extends HTMLElement {
 		}).addTo(this.map);
 		this.hfLayer = layer;
 		// Two frames so the paths paint at opacity 0 before the class flips —
-		// flipping in the same frame would skip the fade transition
+		// flipping in the same frame would skip the fade transition. The
+		// neighbor outlines fade in alongside the gold answer.
 		requestAnimationFrame(() =>
-			requestAnimationFrame(() =>
-				layer.eachLayer((sub) => (sub as L.Path).getElement()?.classList.add('hf-on')),
-			),
+			requestAnimationFrame(() => {
+				layer.eachLayer((sub) => (sub as L.Path).getElement()?.classList.add('hf-on'));
+				this.hfBorders?.eachLayer((sub) => (sub as L.Path).getElement()?.classList.add('hf-on'));
+			}),
 		);
 		this.hfTarget = layer.getBounds().pad(0.35);
 		this.map.flyToBounds(this.hfTarget, { duration: this.hfDurations.zoom });
@@ -1060,6 +1085,7 @@ class MapQuiz extends HTMLElement {
 			layer.eachLayer((sub) => (sub as L.Path).getElement()?.classList.remove('hf-on'));
 			setTimeout(() => layer.remove(), HF_FADE_MS);
 		}
+		this.hfBorders?.eachLayer((sub) => (sub as L.Path).getElement()?.classList.remove('hf-on'));
 		this.map.flyToBounds(this.homeBounds!, { duration: this.hfDurations.zoom });
 		this.hfSchedule(this.hfDurations.zoom, () => this.hfNext());
 	}
@@ -1067,7 +1093,8 @@ class MapQuiz extends HTMLElement {
 	hfSetPaused(paused: boolean) {
 		this.hfPaused = paused;
 		this.pauseButton.classList.toggle('paused', paused);
-		const label = paused ? 'Resume' : 'Pause';
+		// No hfStep yet means the armed just-entered state: Play, not Resume
+		const label = paused ? (this.hfStep ? 'Resume' : 'Play') : 'Pause';
 		this.pauseButton.setAttribute('aria-label', label);
 		this.pauseButton.title = label;
 	}
@@ -1094,20 +1121,18 @@ class MapQuiz extends HTMLElement {
 		this.hfTimer = window.setTimeout(this.hfStep!, this.hfRemaining);
 	}
 
-	// Abort the current prompt's sequence and move on: from the prompt phase
-	// the next prompt starts right away (the map is already home); mid-reveal
-	// it exits through the zoom-out leg. During zoom-out it's already heading
-	// to the next prompt, so there's nothing to skip.
+	// Skip cuts straight to the next prompt: reveal gone, view snapped back
+	// to full extent, no zoom-out leg. Inert until the first Play.
 	hfSkip() {
-		if (this.mode !== 'handsfree') return;
-		if (this.hfPhase === 'zoomout') {
-			if (this.hfPaused) this.hfResume();
-			return;
-		}
+		if (this.mode !== 'handsfree' || !this.hfStep) return;
 		if (this.hfPaused) this.hfSetPaused(false);
 		if (this.hfTimer !== null) clearTimeout(this.hfTimer);
 		this.hfTimer = null;
-		if (this.hfPhase === 'prompt') this.hfNext();
-		else this.hfZoomOut();
+		this.map.stop();
+		this.hfLayer?.remove();
+		this.hfLayer = null;
+		this.hfBorders?.eachLayer((sub) => (sub as L.Path).getElement()?.classList.remove('hf-on'));
+		this.map.fitBounds(this.homeBounds!, { animate: false });
+		this.hfNext();
 	}
 }
