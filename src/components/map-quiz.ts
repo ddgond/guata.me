@@ -1035,10 +1035,9 @@ class MapQuiz extends HTMLElement {
 		this.hfTimer = window.setTimeout(step, this.hfRemaining);
 	}
 
-	hfNext() {
-		this.hfPhase = 'prompt';
-		// With replacement, but never the same prompt twice in a row (unless
-		// the scope only has one)
+	// Pick the upcoming prompt — with replacement, but never the same one
+	// twice in a row (unless the scope only has one) — and show it
+	hfShowNext() {
 		const pool =
 			this.hfItems.length > 1 ? this.hfItems.filter((item) => item !== this.hfItem) : this.hfItems;
 		const item = pool[Math.floor(Math.random() * pool.length)];
@@ -1050,7 +1049,18 @@ class MapQuiz extends HTMLElement {
 		name.textContent = item.prompt;
 		message.append(name, '.');
 		this.status.append(message);
+	}
+
+	// The hold at full extent; the prompt itself is already on screen (it
+	// appears when the zoom-out starts, or immediately on play/skip)
+	hfPrompt() {
+		this.hfPhase = 'prompt';
 		this.hfSchedule(this.hfDurations.prompt, () => this.hfZoomIn());
+	}
+
+	hfNext() {
+		this.hfShowNext();
+		this.hfPrompt();
 	}
 
 	hfZoomIn() {
@@ -1097,7 +1107,10 @@ class MapQuiz extends HTMLElement {
 		}
 		this.hfBorders?.eachLayer((sub) => (sub as L.Path).getElement()?.classList.remove('hf-on'));
 		this.map.flyToBounds(this.homeBounds!, { duration: this.hfDurations.zoom });
-		this.hfSchedule(this.hfDurations.zoom, () => this.hfNext());
+		// The next prompt shows as soon as the flight home starts, so the
+		// searching can begin while the map settles
+		this.hfShowNext();
+		this.hfSchedule(this.hfDurations.zoom, () => this.hfPrompt());
 	}
 
 	hfSetPaused(paused: boolean) {
