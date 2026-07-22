@@ -974,6 +974,7 @@ class MapQuiz extends HTMLElement {
 		this.hfControls.hidden = false;
 		this.bordersBox.closest('label')!.hidden = true;
 		if (this.labelsBox) this.labelsBox.closest('label')!.hidden = true;
+		this.querySelector<HTMLElement>('.progress-btn')!.hidden = true;
 		this.hfBorders = L.geoJSON(
 			this.layers.map((entry) => entry.feature),
 			{
@@ -1018,6 +1019,7 @@ class MapQuiz extends HTMLElement {
 		this.bordersBox.closest('label')!.hidden = false;
 		if (this.labelsBox) this.labelsBox.closest('label')!.hidden = false;
 		if (this.findInput) this.findInput.closest('label')!.hidden = false;
+		this.querySelector<HTMLElement>('.progress-btn')!.hidden = false;
 		this.status.textContent = '';
 		this.syncTiles();
 		if (!rebuilding) {
