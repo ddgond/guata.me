@@ -978,7 +978,15 @@ class MapQuiz extends HTMLElement {
 			this.layers.map((entry) => entry.feature),
 			{
 				interactive: false,
-				style: { color: STROKE, weight: 1.2, opacity: 0.9, fill: false, className: 'hf-reveal' },
+				// The quiz's borders-on look: stroked shapes with the faint tint
+				style: {
+					color: STROKE,
+					weight: 1.2,
+					opacity: 0.9,
+					fillColor: '#000',
+					fillOpacity: 0.12,
+					className: 'hf-reveal',
+				},
 			},
 		).addTo(this.map);
 		this.map.fitBounds(this.homeBounds!);
