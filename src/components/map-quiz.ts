@@ -1,8 +1,8 @@
 // Shared engine for the find-on-map quizzes (kabupaten, area codes). Holds
-// the <map-quiz> custom element: Leaflet map, quiz loop, progress tracking,
-// share links, and dialogs. Each quiz registers a QuizDef describing its data
-// file, prompts, picker, and storage keys — see map-quiz-defs.ts. The markup
-// the element expects lives in MapQuizShell.astro.
+// the <map-quiz> custom element: Leaflet map, quiz loop, hands-free autoplay,
+// progress tracking, share links, and dialogs. Each quiz registers a QuizDef
+// describing its data file, prompts, picker, and storage keys — see
+// map-quiz-defs.ts. The markup the element expects lives in MapQuizShell.astro.
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -92,6 +92,20 @@ const TILES_NO_LABELS =
 const STROKE = '#075985';
 const FLASH_MS = 700;
 
+// Hands-free pacing: stepper bounds and defaults, all in seconds. The reveal
+// fade itself is CSS (see MapQuizShell); HF_FADE_MS just outlives it so the
+// layer isn't removed mid-fade.
+const HF_MIN_SECONDS = 0.5;
+const HF_MAX_SECONDS = 30;
+const HF_STEP_SECONDS = 0.5;
+const HF_FADE_MS = 300;
+const HF_DEFAULTS = { prompt: 5, zoom: 2, linger: 4 };
+type HFDurations = typeof HF_DEFAULTS;
+const clampDuration = (value: unknown, fallback: number) =>
+	typeof value === 'number' && Number.isFinite(value)
+		? Math.min(HF_MAX_SECONDS, Math.max(HF_MIN_SECONDS, Math.round(value * 2) / 2))
+		: fallback;
+
 // Inline icons for the toggles and the progress-table columns: a dashed
 // circle for borders, a map pin for labels, an X for neither
 const icon = (paths: string) =>
@@ -169,6 +183,12 @@ class MapQuiz extends HTMLElement {
 	layers: { layer: L.Path; feature: QuizFeature }[] = [];
 	status!: HTMLElement;
 	startButton!: HTMLButtonElement;
+	hfButton!: HTMLButtonElement;
+	hfTransport!: HTMLElement;
+	hfControls!: HTMLElement;
+	pauseButton!: HTMLButtonElement;
+	tilesLabeled!: L.TileLayer;
+	tilesUnlabeled: L.TileLayer | null = null;
 	bordersBox!: HTMLInputElement;
 	labelsBox: HTMLInputElement | null = null;
 	picker: HTMLSelectElement | null = null;
@@ -183,7 +203,7 @@ class MapQuiz extends HTMLElement {
 	confirmResolve: ((confirmed: boolean) => void) | null = null;
 
 	// Quiz state
-	mode: 'explore' | 'quiz' = 'explore';
+	mode: 'explore' | 'quiz' | 'handsfree' = 'explore';
 	queue: Item[] = [];
 	current: Item | null = null;
 	awaiting: 'answer' | 'confirm' = 'answer';
@@ -206,6 +226,24 @@ class MapQuiz extends HTMLElement {
 	runScopeKey = '';
 	runStartedAt = 0;
 
+	// Hands-free state. The phase machine runs on wall-clock timers (the
+	// durations are the source of truth, not Leaflet's moveend), so pausing
+	// stores the time left and resuming re-arms it; the in-flight zoom is
+	// halted with map.stop() and resumed by flying the rest of the way.
+	hfPhase: 'prompt' | 'zoomin' | 'linger' | 'zoomout' = 'prompt';
+	hfItems: Item[] = [];
+	hfItem: Item | null = null;
+	hfLayer: L.GeoJSON | null = null;
+	hfTarget: L.LatLngBounds | null = null;
+	hfPaused = false;
+	hfTimer: number | null = null;
+	hfDeadline = 0;
+	hfRemaining = 0;
+	hfStep: (() => void) | null = null;
+	hfDurations: HFDurations = { ...HF_DEFAULTS };
+	// The scope's full-extent view, kept for the hands-free zoom-out leg
+	homeBounds: L.LatLngBoundsExpression | null = null;
+
 	connectedCallback() {
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -223,6 +261,10 @@ class MapQuiz extends HTMLElement {
 		this.def = registry.get(this.dataset.quiz!)!;
 		this.status = this.querySelector('.status')!;
 		this.startButton = this.querySelector('.start')!;
+		this.hfButton = this.querySelector('.hf-btn')!;
+		this.hfTransport = this.querySelector('.hf-transport')!;
+		this.hfControls = this.querySelector('.hf-controls')!;
+		this.pauseButton = this.querySelector('.hf-pause')!;
 		this.bordersBox = this.querySelector('.borders')!;
 		this.labelsBox = this.querySelector('.labels');
 		this.nameTip = this.querySelector('.name-tip')!;
@@ -268,19 +310,12 @@ class MapQuiz extends HTMLElement {
 		this.map.on('movestart zoomstart', () => (this.nameTip.hidden = true));
 
 		const tileOptions = { attribution: this.def.attribution, maxZoom: 15 };
-		if (this.labelsBox) {
-			const labeled = L.tileLayer(TILES_LABELS, tileOptions);
-			const unlabeled = L.tileLayer(TILES_NO_LABELS, tileOptions);
-			(this.labelsBox.checked ? labeled : unlabeled).addTo(this.map);
-			this.labelsBox.addEventListener('change', () =>
-				this.toggleChanged(this.labelsBox!, () => {
-					this.map.removeLayer(this.labelsBox!.checked ? unlabeled : labeled);
-					this.map.addLayer(this.labelsBox!.checked ? labeled : unlabeled);
-				}),
-			);
-		} else {
-			L.tileLayer(TILES_LABELS, tileOptions).addTo(this.map);
-		}
+		this.tilesLabeled = L.tileLayer(TILES_LABELS, tileOptions);
+		this.tilesUnlabeled = this.labelsBox ? L.tileLayer(TILES_NO_LABELS, tileOptions) : null;
+		this.syncTiles();
+		this.labelsBox?.addEventListener('change', () =>
+			this.toggleChanged(this.labelsBox!, () => this.syncTiles()),
+		);
 
 		this.bordersBox.addEventListener('change', () =>
 			this.toggleChanged(this.bordersBox, () => this.restyleAll()),
@@ -353,10 +388,23 @@ class MapQuiz extends HTMLElement {
 			else this.startQuiz();
 		});
 
+		const savedDurations = readStored<Partial<HFDurations>>(this.hfStoreKey());
+		for (const key of ['prompt', 'zoom', 'linger'] as const)
+			this.hfDurations[key] = clampDuration(savedDurations?.[key], HF_DEFAULTS[key]);
+		for (const stepper of this.querySelectorAll<HTMLElement>('.hf-stepper'))
+			this.wireStepper(stepper);
+		this.hfButton.addEventListener('click', () => this.startHandsFree());
+		this.pauseButton.addEventListener('click', () =>
+			this.hfPaused ? this.hfResume() : this.hfPause(),
+		);
+		this.querySelector('.hf-skip')!.addEventListener('click', () => this.hfSkip());
+		this.querySelector('.hf-stop')!.addEventListener('click', () => this.stopHandsFree());
+
 		this.wireDialogs();
 
 		this.setScope();
 		this.startButton.disabled = false;
+		this.hfButton.disabled = false;
 	}
 
 	persistUI() {
@@ -429,6 +477,7 @@ class MapQuiz extends HTMLElement {
 			if (e.key !== 'Escape') return;
 			if (!this.confirmOverlay.hidden) this.resolveConfirm(false);
 			else if (!this.progressOverlay.hidden) this.progressOverlay.hidden = true;
+			else if (this.mode === 'handsfree') this.stopHandsFree();
 		});
 	}
 
@@ -558,6 +607,7 @@ class MapQuiz extends HTMLElement {
 
 	setScope() {
 		const features = this.def.filter(this.dataset.scope, this.picker?.value ?? null, this.features);
+		this.stopHandsFree(true);
 		this.endQuiz(true);
 		this.review.clear();
 		this.geoLayer?.remove();
@@ -574,7 +624,8 @@ class MapQuiz extends HTMLElement {
 			},
 		}).addTo(this.map);
 		const override = this.def.fitBounds?.(this.dataset.scope, this.picker?.value ?? null);
-		this.map.fitBounds(override ?? this.geoLayer.getBounds().pad(0.05));
+		this.homeBounds = override ?? this.geoLayer.getBounds().pad(0.05);
+		this.map.fitBounds(this.homeBounds);
 		this.status.textContent = '';
 	}
 
@@ -678,15 +729,7 @@ class MapQuiz extends HTMLElement {
 		this.runToggled = false;
 		this.runScopeKey = this.scopeKey();
 		this.runStartedAt = Date.now();
-		const byPrompt = new Map<string, Item>();
-		for (const { feature } of this.layers) {
-			for (const prompt of this.def.prompts(feature)) {
-				const item = byPrompt.get(prompt);
-				if (item) item.features.push(feature);
-				else byPrompt.set(prompt, { prompt, features: [feature] });
-			}
-		}
-		this.queue = shuffle([...byPrompt.values()]);
+		this.queue = shuffle(this.buildItems());
 		this.total = this.queue.length;
 		this.missed.clear();
 		this.firstTry.clear();
@@ -700,8 +743,23 @@ class MapQuiz extends HTMLElement {
 		}
 		this.nameTip.hidden = true;
 		this.startButton.textContent = 'End Quiz';
+		this.hfButton.hidden = true;
 		this.restyleAll();
 		this.nextQuestion();
+	}
+
+	// Group the scoped shapes into question items, one per distinct prompt
+	// (overlay codes shared by two shapes collapse into a single item)
+	buildItems(): Item[] {
+		const byPrompt = new Map<string, Item>();
+		for (const { feature } of this.layers) {
+			for (const prompt of this.def.prompts(feature)) {
+				const item = byPrompt.get(prompt);
+				if (item) item.features.push(feature);
+				else byPrompt.set(prompt, { prompt, features: [feature] });
+			}
+		}
+		return [...byPrompt.values()];
 	}
 
 	endQuiz(silent = false) {
@@ -718,6 +776,7 @@ class MapQuiz extends HTMLElement {
 		this.revealed = null;
 		if (this.findInput) this.findInput.closest('label')!.hidden = false;
 		this.startButton.textContent = 'Start Quiz';
+		this.hfButton.hidden = false;
 		if (this.layers.length) this.restyleAll();
 		if (!silent) this.status.textContent = '';
 	}
@@ -822,5 +881,233 @@ class MapQuiz extends HTMLElement {
 			message.append('That was ', guess, '. ', name, ' is highlighted. Click it to continue.');
 			this.status.append(message, skip);
 		}
+	}
+
+	// --- hands-free ------------------------------------------------------
+
+	// Hands-free forces the labeled tiles (scanning the map's own labels is
+	// the whole game); outside it the Labels toggle rules, and quizzes
+	// without the toggle are always labeled
+	syncTiles() {
+		if (!this.tilesUnlabeled) return;
+		const wantLabeled = this.mode === 'handsfree' || !this.labelsBox || this.labelsBox.checked;
+		const want = wantLabeled ? this.tilesLabeled : this.tilesUnlabeled;
+		const other = wantLabeled ? this.tilesUnlabeled : this.tilesLabeled;
+		if (this.map.hasLayer(other)) this.map.removeLayer(other);
+		if (!this.map.hasLayer(want)) this.map.addLayer(want);
+	}
+
+	// Durations are a per-quiz preference, keyed by the registry name so
+	// every page embedding the same quiz shares them
+	hfStoreKey() {
+		return `hf-durations:${this.dataset.quiz}`;
+	}
+
+	wireStepper(stepper: HTMLElement) {
+		const key = stepper.dataset.dur as keyof HFDurations;
+		const value = stepper.querySelector('.hf-value')!;
+		const render = () => {
+			const v = this.hfDurations[key];
+			value.textContent = `${v % 1 ? v.toFixed(1) : v}s`;
+		};
+		const nudge = (delta: number) => {
+			this.hfDurations[key] = clampDuration(this.hfDurations[key] + delta, HF_DEFAULTS[key]);
+			writeStored(this.hfStoreKey(), this.hfDurations);
+			render();
+		};
+		// Press-and-hold repeats after a beat. The chevrons stay enabled at
+		// the clamp bounds: a disabled button stops firing pointer events, so
+		// disabling mid-hold would strand the repeat interval.
+		const wire = (button: HTMLButtonElement, delta: number) => {
+			let hold = 0;
+			let repeat = 0;
+			const clear = () => {
+				clearTimeout(hold);
+				clearInterval(repeat);
+			};
+			button.addEventListener('pointerdown', (event) => {
+				event.preventDefault();
+				nudge(delta);
+				hold = window.setTimeout(() => (repeat = window.setInterval(() => nudge(delta), 120)), 450);
+			});
+			for (const type of ['pointerup', 'pointercancel', 'pointerleave'] as const)
+				button.addEventListener(type, clear);
+			// Keyboard activation arrives as a click with detail 0 (pointer
+			// clicks already stepped on pointerdown)
+			button.addEventListener('click', (event) => {
+				if (event.detail === 0) nudge(delta);
+			});
+		};
+		wire(stepper.querySelector<HTMLButtonElement>('.hf-dec')!, -HF_STEP_SECONDS);
+		wire(stepper.querySelector<HTMLButtonElement>('.hf-inc')!, HF_STEP_SECONDS);
+		render();
+	}
+
+	startHandsFree() {
+		if (this.mode !== 'explore' || !this.geoLayer) return;
+		this.hfItems = this.buildItems();
+		if (!this.hfItems.length) return;
+		this.mode = 'handsfree';
+		this.nameTip.hidden = true;
+		if (this.findInput) {
+			this.findInput.value = '';
+			this.findPattern = '';
+			this.findInput.closest('label')!.hidden = true;
+		}
+		// The region layer comes off the map entirely: the prompt phase shows
+		// nothing but the labeled basemap, and only the answer gets drawn
+		this.geoLayer.remove();
+		this.syncTiles();
+		this.startButton.hidden = true;
+		this.hfButton.hidden = true;
+		this.hfTransport.hidden = false;
+		this.hfControls.hidden = false;
+		this.bordersBox.closest('label')!.hidden = true;
+		if (this.labelsBox) this.labelsBox.closest('label')!.hidden = true;
+		this.map.fitBounds(this.homeBounds!);
+		this.hfNext();
+	}
+
+	// rebuilding is setScope tearing things down before it refits the new
+	// scope itself — skip the layer/view restoration it's about to redo
+	stopHandsFree(rebuilding = false) {
+		if (this.mode !== 'handsfree') return;
+		this.mode = 'explore';
+		if (this.hfTimer !== null) clearTimeout(this.hfTimer);
+		this.hfTimer = null;
+		this.hfItem = null;
+		this.hfSetPaused(false);
+		this.map.stop();
+		this.hfLayer?.remove();
+		this.hfLayer = null;
+		this.hfTransport.hidden = true;
+		this.hfControls.hidden = true;
+		this.startButton.hidden = false;
+		this.hfButton.hidden = false;
+		this.bordersBox.closest('label')!.hidden = false;
+		if (this.labelsBox) this.labelsBox.closest('label')!.hidden = false;
+		if (this.findInput) this.findInput.closest('label')!.hidden = false;
+		this.status.textContent = '';
+		this.syncTiles();
+		if (!rebuilding) {
+			this.geoLayer?.addTo(this.map);
+			this.map.fitBounds(this.homeBounds!);
+		}
+	}
+
+	hfSchedule(seconds: number, step: () => void) {
+		this.hfStep = step;
+		this.hfRemaining = seconds * 1000;
+		this.hfDeadline = Date.now() + this.hfRemaining;
+		this.hfTimer = window.setTimeout(step, this.hfRemaining);
+	}
+
+	hfNext() {
+		this.hfPhase = 'prompt';
+		// With replacement, but never the same prompt twice in a row (unless
+		// the scope only has one)
+		const pool =
+			this.hfItems.length > 1 ? this.hfItems.filter((item) => item !== this.hfItem) : this.hfItems;
+		const item = pool[Math.floor(Math.random() * pool.length)];
+		this.hfItem = item;
+		this.status.innerHTML = '';
+		const message = document.createElement('span');
+		message.append('Find ');
+		const name = document.createElement('strong');
+		name.textContent = item.prompt;
+		message.append(name, '.');
+		this.status.append(message);
+		this.hfSchedule(this.hfDurations.prompt, () => this.hfZoomIn());
+	}
+
+	hfZoomIn() {
+		this.hfPhase = 'zoomin';
+		const layer = L.geoJSON(this.hfItem!.features, {
+			interactive: false,
+			// The quiz's gold reveal style; the class hooks the snappy CSS fade
+			style: {
+				color: STROKE,
+				weight: 1.2,
+				opacity: 0.9,
+				fillColor: 'gold',
+				fillOpacity: 0.35,
+				className: 'hf-reveal',
+			},
+		}).addTo(this.map);
+		this.hfLayer = layer;
+		// Two frames so the paths paint at opacity 0 before the class flips —
+		// flipping in the same frame would skip the fade transition
+		requestAnimationFrame(() =>
+			requestAnimationFrame(() =>
+				layer.eachLayer((sub) => (sub as L.Path).getElement()?.classList.add('hf-on')),
+			),
+		);
+		this.hfTarget = layer.getBounds().pad(0.35);
+		this.map.flyToBounds(this.hfTarget, { duration: this.hfDurations.zoom });
+		this.hfSchedule(this.hfDurations.zoom, () => this.hfLinger());
+	}
+
+	hfLinger() {
+		this.hfPhase = 'linger';
+		this.hfSchedule(this.hfDurations.linger, () => this.hfZoomOut());
+	}
+
+	hfZoomOut() {
+		this.hfPhase = 'zoomout';
+		const layer = this.hfLayer;
+		this.hfLayer = null;
+		if (layer) {
+			layer.eachLayer((sub) => (sub as L.Path).getElement()?.classList.remove('hf-on'));
+			setTimeout(() => layer.remove(), HF_FADE_MS);
+		}
+		this.map.flyToBounds(this.homeBounds!, { duration: this.hfDurations.zoom });
+		this.hfSchedule(this.hfDurations.zoom, () => this.hfNext());
+	}
+
+	hfSetPaused(paused: boolean) {
+		this.hfPaused = paused;
+		this.pauseButton.classList.toggle('paused', paused);
+		const label = paused ? 'Resume' : 'Pause';
+		this.pauseButton.setAttribute('aria-label', label);
+		this.pauseButton.title = label;
+	}
+
+	hfPause() {
+		if (this.mode !== 'handsfree' || this.hfPaused) return;
+		this.hfSetPaused(true);
+		if (this.hfTimer !== null) clearTimeout(this.hfTimer);
+		this.hfTimer = null;
+		this.hfRemaining = Math.max(0, this.hfDeadline - Date.now());
+		this.map.stop();
+	}
+
+	hfResume() {
+		if (this.mode !== 'handsfree' || !this.hfPaused) return;
+		this.hfSetPaused(false);
+		// A zoom leg frozen mid-flight flies the rest of the way in the time
+		// it had left; hold phases just re-arm the timer
+		const seconds = Math.max(this.hfRemaining / 1000, 0.05);
+		if (this.hfPhase === 'zoomin') this.map.flyToBounds(this.hfTarget!, { duration: seconds });
+		else if (this.hfPhase === 'zoomout')
+			this.map.flyToBounds(this.homeBounds!, { duration: seconds });
+		this.hfDeadline = Date.now() + this.hfRemaining;
+		this.hfTimer = window.setTimeout(this.hfStep!, this.hfRemaining);
+	}
+
+	// Abort the current prompt's sequence and move on: from the prompt phase
+	// the next prompt starts right away (the map is already home); mid-reveal
+	// it exits through the zoom-out leg. During zoom-out it's already heading
+	// to the next prompt, so there's nothing to skip.
+	hfSkip() {
+		if (this.mode !== 'handsfree') return;
+		if (this.hfPhase === 'zoomout') {
+			if (this.hfPaused) this.hfResume();
+			return;
+		}
+		if (this.hfPaused) this.hfSetPaused(false);
+		if (this.hfTimer !== null) clearTimeout(this.hfTimer);
+		this.hfTimer = null;
+		if (this.hfPhase === 'prompt') this.hfNext();
+		else this.hfZoomOut();
 	}
 }

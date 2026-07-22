@@ -60,7 +60,55 @@ const findWidth = Math.max(
 				</select>
 			)
 		}
-		<button class="start" disabled>Start Quiz</button>
+		<div class="top-actions">
+			<span class="hf-transport" hidden>
+				<button class="hf-pause" aria-label="Pause" title="Pause">
+					<svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+						<rect x="4.2" y="3.5" width="2.6" height="9" rx="0.8" fill="currentColor"></rect>
+						<rect x="9.2" y="3.5" width="2.6" height="9" rx="0.8" fill="currentColor"></rect>
+					</svg>
+					<svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+						<path d="M5.5 3.4 L12.7 8 L5.5 12.6 Z" fill="currentColor"></path>
+					</svg>
+				</button>
+				<button class="hf-skip" aria-label="Skip" title="Skip">
+					<svg viewBox="0 0 16 16" aria-hidden="true">
+						<path d="M3.8 3.6 L10 8 L3.8 12.4 Z" fill="currentColor"></path>
+						<rect x="10.8" y="3.6" width="1.9" height="8.8" rx="0.7" fill="currentColor"></rect>
+					</svg>
+				</button>
+				<button class="hf-stop" aria-label="Stop" title="Stop">
+					<svg viewBox="0 0 16 16" aria-hidden="true">
+						<rect x="4" y="4" width="8" height="8" rx="1.2" fill="currentColor"></rect>
+					</svg>
+				</button>
+			</span>
+			<button class="start" disabled>Start Quiz</button>
+			<button class="hf-btn" aria-label="Hands-free mode" title="Hands-free mode" disabled>
+				<svg viewBox="0 0 16 16" aria-hidden="true">
+					<path
+						d="M13.5 8 A5.5 5.5 0 1 1 11.9 4.1"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"></path>
+					<path
+						d="M11.6 2.2 L11.9 4.1 L10 3.8"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.2"
+						stroke-linecap="round"
+						stroke-linejoin="round"></path>
+					<path
+						d="M5.9 10.9 L8 5 L10.1 10.9 M6.7 9.1 L9.3 9.1"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.4"
+						stroke-linecap="round"
+						stroke-linejoin="round"></path>
+				</svg>
+			</button>
+		</div>
 	</div>
 	<div class="bar status" aria-live="polite">loading map…</div>
 	<div class="map-wrap">
@@ -122,6 +170,32 @@ const findWidth = Math.max(
 				</label>
 			)
 		}
+		<div class="hf-controls" hidden>
+			<div class="hf-stepper" data-dur="prompt">
+				<span class="hf-label">Prompt</span>
+				<span class="hf-row">
+					<button class="hf-dec" aria-label="Shorter prompt time">‹</button>
+					<span class="hf-value">5s</span>
+					<button class="hf-inc" aria-label="Longer prompt time">›</button>
+				</span>
+			</div>
+			<div class="hf-stepper" data-dur="zoom">
+				<span class="hf-label">Zoom</span>
+				<span class="hf-row">
+					<button class="hf-dec" aria-label="Shorter zoom time">‹</button>
+					<span class="hf-value">2s</span>
+					<button class="hf-inc" aria-label="Longer zoom time">›</button>
+				</span>
+			</div>
+			<div class="hf-stepper" data-dur="linger">
+				<span class="hf-label">Linger</span>
+				<span class="hf-row">
+					<button class="hf-dec" aria-label="Shorter linger time">‹</button>
+					<span class="hf-value">4s</span>
+					<button class="hf-inc" aria-label="Longer linger time">›</button>
+				</span>
+			</div>
+		</div>
 		<button class="progress-btn">View Progress</button>
 	</div>
 </map-quiz>
@@ -240,6 +314,116 @@ const findWidth = Math.max(
 		margin-left: auto;
 		cursor: pointer;
 		white-space: nowrap;
+	}
+	/* Start/Hands-Free on the right of the top bar; the transport trio swaps
+	   in for them while hands-free plays, so only one group is ever visible */
+	.top-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-left: auto;
+	}
+	.hf-transport {
+		display: flex;
+		gap: 0.4rem;
+	}
+	.hf-transport[hidden] {
+		display: none;
+	}
+	.hf-btn,
+	.hf-transport button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.28em 0.45em;
+		background: none;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		color: inherit;
+		cursor: pointer;
+	}
+	/* No display on the svgs themselves: the buttons are flex containers (so
+	   the icons are blockified anyway), and a display here would outweigh the
+	   pause/play swap rules below once Astro's scoping attributes pile onto
+	   every selector */
+	.hf-btn svg,
+	.hf-transport button svg {
+		width: 1.1em;
+		height: 1.1em;
+	}
+	.hf-btn:hover:not(:disabled),
+	.hf-transport button:hover {
+		border-color: var(--sky-line);
+	}
+	.hf-btn:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+	.hf-btn[hidden] {
+		display: none;
+	}
+	/* The pause button carries both glyphs; the paused class picks one */
+	.hf-pause .icon-play {
+		display: none;
+	}
+	.hf-pause.paused .icon-pause {
+		display: none;
+	}
+	.hf-pause.paused .icon-play {
+		display: block;
+	}
+	.hf-controls {
+		display: flex;
+		align-items: center;
+		gap: 1.1rem;
+	}
+	.hf-controls[hidden] {
+		display: none;
+	}
+	.hf-stepper {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	.hf-label {
+		font-size: 0.72rem;
+		color: var(--ink-soft);
+	}
+	.hf-row {
+		display: flex;
+		align-items: center;
+	}
+	.hf-dec,
+	.hf-inc {
+		padding: 0 0.35em;
+		background: none;
+		border: none;
+		color: var(--ink-soft);
+		font: inherit;
+		font-size: 1.05rem;
+		line-height: 1;
+		cursor: pointer;
+		user-select: none;
+		-webkit-user-select: none;
+		touch-action: manipulation;
+	}
+	.hf-dec:hover,
+	.hf-inc:hover {
+		color: var(--sky-deep);
+	}
+	.hf-value {
+		min-width: 2.4em;
+		text-align: center;
+		font-variant-numeric: tabular-nums;
+	}
+	/* The hands-free reveal fades in/out snappily whatever the zoom pace;
+	   paths are Leaflet-created, so they need :global() */
+	map-quiz :global(path.hf-reveal) {
+		opacity: 0;
+		transition: opacity 0.25s ease;
+	}
+	map-quiz :global(path.hf-reveal.hf-on) {
+		opacity: 1;
 	}
 	/* The skip and share buttons are created from the script, so they need
 	   :global() */
@@ -399,5 +583,11 @@ const findWidth = Math.max(
 		align-items: center;
 		gap: 0.35em;
 		cursor: pointer;
+	}
+	/* The script hides bar controls via the hidden attribute (Find during
+	   quizzes, the toggles during hands-free); the display rules above would
+	   silently win without this */
+	.options label[hidden] {
+		display: none;
 	}
 </style>
