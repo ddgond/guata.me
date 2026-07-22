@@ -341,7 +341,13 @@ const findWidth = Math.max(
 		border: 1px solid var(--line);
 		border-radius: 6px;
 		color: inherit;
+		font: inherit;
 		cursor: pointer;
+		/* Square, and exactly the text buttons' height (their line box plus
+		   block padding and borders) — these hold only an svg, so without the
+		   min-height they'd come out shorter whenever Start Quiz is hidden */
+		min-height: calc(1lh + 0.4em + 2px);
+		min-width: calc(1lh + 0.4em + 2px);
 	}
 	/* No display on the svgs themselves: the buttons are flex containers (so
 	   the icons are blockified anyway), and a display here would outweigh the
