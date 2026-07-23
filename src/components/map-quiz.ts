@@ -237,6 +237,10 @@ class MapQuiz extends HTMLElement {
 	// Every scoped shape's outline, kept on the map for the whole session and
 	// faded in/out with the reveal so neighbors give the answer context
 	hfBorders: L.GeoJSON | null = null;
+	// Both hands-free layers draw into their own renderer so the zoom legs
+	// can re-project it mid-flight (see hfStartRefresh)
+	hfRenderer: L.SVG | null = null;
+	hfRefreshTimer: number | null = null;
 	hfTarget: L.LatLngBounds | null = null;
 	hfPaused = false;
 	hfTimer: number | null = null;
@@ -975,10 +979,12 @@ class MapQuiz extends HTMLElement {
 		this.bordersBox.closest('label')!.hidden = true;
 		if (this.labelsBox) this.labelsBox.closest('label')!.hidden = true;
 		this.querySelector<HTMLElement>('.progress-btn')!.hidden = true;
+		this.hfRenderer = L.svg({ padding: 0.3 });
 		this.hfBorders = L.geoJSON(
 			this.layers.map((entry) => entry.feature),
 			{
 				interactive: false,
+				renderer: this.hfRenderer,
 				// The quiz's borders-on look: stroked shapes with the faint tint
 				style: {
 					color: STROKE,
@@ -988,7 +994,7 @@ class MapQuiz extends HTMLElement {
 					fillOpacity: 0.12,
 					className: 'hf-reveal',
 				},
-			},
+			} as L.GeoJSONOptions,
 		).addTo(this.map);
 		this.map.fitBounds(this.homeBounds!);
 		// Armed, not playing: the loop waits for Play so the durations can be
@@ -1012,6 +1018,9 @@ class MapQuiz extends HTMLElement {
 		this.hfLayer = null;
 		this.hfBorders?.remove();
 		this.hfBorders = null;
+		this.hfStopRefresh();
+		this.hfRenderer?.remove();
+		this.hfRenderer = null;
 		this.hfTransport.hidden = true;
 		this.hfControls.hidden = true;
 		this.startButton.hidden = false;
@@ -1026,6 +1035,26 @@ class MapQuiz extends HTMLElement {
 			this.geoLayer?.addTo(this.map);
 			this.map.fitBounds(this.homeBounds!);
 		}
+	}
+
+	// Crisp borders through the zoom legs. Leaflet re-projects vector layers
+	// only when a zoom settles; during a flight the SVG container is just
+	// CSS-scaled, which rasterizes a country-to-district flight into mush.
+	// Re-projecting our private renderer every 150ms keeps the scale factor
+	// near 1 the whole way. _reset is private API (Leaflet 1.9, pinned).
+	hfStartRefresh() {
+		if (this.hfRefreshTimer !== null) return;
+		this.hfRefreshTimer = window.setInterval(() => this.hfRefresh(), 150);
+	}
+
+	hfStopRefresh() {
+		if (this.hfRefreshTimer === null) return;
+		clearInterval(this.hfRefreshTimer);
+		this.hfRefreshTimer = null;
+	}
+
+	hfRefresh() {
+		(this.hfRenderer as unknown as { _reset(): void } | null)?._reset();
 	}
 
 	hfSchedule(seconds: number, step: () => void) {
@@ -1055,6 +1084,7 @@ class MapQuiz extends HTMLElement {
 	// appears when the zoom-out starts, or immediately on play/skip)
 	hfPrompt() {
 		this.hfPhase = 'prompt';
+		this.hfStopRefresh();
 		this.hfSchedule(this.hfDurations.prompt, () => this.hfZoomIn());
 	}
 
@@ -1067,6 +1097,7 @@ class MapQuiz extends HTMLElement {
 		this.hfPhase = 'zoomin';
 		const layer = L.geoJSON(this.hfItem!.features, {
 			interactive: false,
+			renderer: this.hfRenderer!,
 			// The quiz's gold reveal style; the class hooks the snappy CSS fade
 			style: {
 				color: STROKE,
@@ -1076,7 +1107,7 @@ class MapQuiz extends HTMLElement {
 				fillOpacity: 0.35,
 				className: 'hf-reveal',
 			},
-		}).addTo(this.map);
+		} as L.GeoJSONOptions).addTo(this.map);
 		this.hfLayer = layer;
 		// Two frames so the paths paint at opacity 0 before the class flips —
 		// flipping in the same frame would skip the fade transition. The
@@ -1089,11 +1120,13 @@ class MapQuiz extends HTMLElement {
 		);
 		this.hfTarget = layer.getBounds().pad(0.35);
 		this.map.flyToBounds(this.hfTarget, { duration: this.hfDurations.zoom });
+		this.hfStartRefresh();
 		this.hfSchedule(this.hfDurations.zoom, () => this.hfLinger());
 	}
 
 	hfLinger() {
 		this.hfPhase = 'linger';
+		this.hfStopRefresh();
 		this.hfSchedule(this.hfDurations.linger, () => this.hfZoomOut());
 	}
 
@@ -1107,6 +1140,7 @@ class MapQuiz extends HTMLElement {
 		}
 		this.hfBorders?.eachLayer((sub) => (sub as L.Path).getElement()?.classList.remove('hf-on'));
 		this.map.flyToBounds(this.homeBounds!, { duration: this.hfDurations.zoom });
+		this.hfStartRefresh();
 		// The next prompt shows as soon as the flight home starts, so the
 		// searching can begin while the map settles
 		this.hfShowNext();
@@ -1129,6 +1163,9 @@ class MapQuiz extends HTMLElement {
 		this.hfTimer = null;
 		this.hfRemaining = Math.max(0, this.hfDeadline - Date.now());
 		this.map.stop();
+		// One last re-projection so the frozen frame is sharp
+		this.hfStopRefresh();
+		this.hfRefresh();
 	}
 
 	hfResume() {
@@ -1140,6 +1177,7 @@ class MapQuiz extends HTMLElement {
 		if (this.hfPhase === 'zoomin') this.map.flyToBounds(this.hfTarget!, { duration: seconds });
 		else if (this.hfPhase === 'zoomout')
 			this.map.flyToBounds(this.homeBounds!, { duration: seconds });
+		if (this.hfPhase === 'zoomin' || this.hfPhase === 'zoomout') this.hfStartRefresh();
 		this.hfDeadline = Date.now() + this.hfRemaining;
 		this.hfTimer = window.setTimeout(this.hfStep!, this.hfRemaining);
 	}
