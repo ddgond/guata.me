@@ -1013,7 +1013,6 @@ class MapQuiz extends HTMLElement {
 		this.hfItem = null;
 		this.hfStep = null;
 		this.hfSetPaused(false);
-		this.map.stop();
 		this.hfLayer?.remove();
 		this.hfLayer = null;
 		this.hfBorders?.remove();
@@ -1189,10 +1188,12 @@ class MapQuiz extends HTMLElement {
 		if (this.hfPaused) this.hfSetPaused(false);
 		if (this.hfTimer !== null) clearTimeout(this.hfTimer);
 		this.hfTimer = null;
-		this.map.stop();
 		this.hfLayer?.remove();
 		this.hfLayer = null;
 		this.hfBorders?.eachLayer((sub) => (sub as L.Path).getElement()?.classList.remove('hf-on'));
+		// No map.stop() first: its zoom-snap starts a CSS zoom animation whose
+		// completion would clobber this instant view reset. fitBounds itself
+		// cancels an in-flight flyTo before applying.
 		this.map.fitBounds(this.homeBounds!, { animate: false });
 		this.hfNext();
 	}
